@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ToolCard } from "./ToolCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +72,7 @@ const tools = [
 
 export const ToolsGrid = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const navigate = useNavigate();
 
   const categories = [
     { id: "all", label: "All Tools", count: tools.length },
@@ -86,8 +88,13 @@ export const ToolsGrid = () => {
     : tools.filter(tool => tool.category === selectedCategory);
 
   const handleToolClick = (toolId: string) => {
-    // For now, just scroll to tools section or show coming soon
-    console.log("Opening tool:", toolId);
+    const workingTools = ["merge-pdf", "split-pdf", "protect-pdf", "compress-pdf"];
+    if (workingTools.includes(toolId)) {
+      navigate(`/tool/${toolId}`);
+    } else {
+      // Show coming soon for other tools
+      alert("This tool is coming soon! Try our working tools: Merge PDF, Split PDF, Protect PDF, or Compress PDF.");
+    }
   };
 
   return (
