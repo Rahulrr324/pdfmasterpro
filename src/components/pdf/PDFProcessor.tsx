@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { ProgressTracker } from "./ProgressTracker";
 import { PDFToolOptions } from "./PDFToolOptions";
 import { PDFEngine } from "./PDFEngine";
 
-type ProcessingTool = "merge" | "split" | "compress" | "protect" | "convert" | "rotate" | "crop" | "extract" | "watermark";
+type ProcessingTool = "merge" | "split" | "compress" | "protect" | "convert" | "rotate" | "crop" | "extract" | "watermark" | "edit";
 
 interface PDFProcessorProps {
   tool: ProcessingTool;
@@ -88,6 +87,26 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
         case "watermark":
           result = await PDFEngine.addWatermark(files[0], options);
           filename = "watermarked.pdf";
+          break;
+
+        case "extract":
+          result = await PDFEngine.extractPages(files[0], options);
+          filename = "extracted.pdf";
+          break;
+
+        case "crop":
+          result = await PDFEngine.cropPDF(files[0], options);
+          filename = "cropped.pdf";
+          break;
+
+        case "edit":
+          result = await PDFEngine.editPDF(files[0], options);
+          filename = "edited.pdf";
+          break;
+
+        case "convert":
+          result = await PDFEngine.convertPDF(files[0], options);
+          filename = "converted.pdf";
           break;
           
         default:
