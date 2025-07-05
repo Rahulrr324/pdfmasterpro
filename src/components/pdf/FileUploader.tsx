@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Upload, X, FileText, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, X, FileText, AlertCircle, CheckCircle, File } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface FileUploaderProps {
@@ -21,40 +21,63 @@ export const FileUploader = ({
   onFilesChange, 
   allowMultiple = false, 
   acceptedTypes = ".pdf",
-  maxSizeInMB = 10 
+  maxSizeInMB = 50 
 }: FileUploaderProps) => {
   const { toast } = useToast();
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
-  const validateFile = (file: File): boolean => {
+  const validateFile = (file: File): string | null => {
     if (file.size > maxSizeInMB * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: `${file.name} exceeds ${maxSizeInMB}MB limit`,
-        variant: "destructive"
-      });
-      return false;
+      return `File "${file.name}" exceeds ${maxSizeInMB}MB limit`;
     }
 
     if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
-      toast({
-        title: "Invalid file type",
-        description: `${file.name} is not a valid PDF file`,
-        variant: "destructive"
-      });
-      return false;
+      return `File "${file.name}" is not a valid PDF file`;
     }
 
-    return true;
+    if (file.size === 0) {
+      return `File "${file.name}" is empty`;
+    }
+
+    return null;
   };
 
   const processFiles = async (selectedFiles: File[]) => {
     const validFiles: File[] = [];
+    const errors: string[] = [];
     
     for (const file of selectedFiles) {
-      if (validateFile(file)) {
-        // Simulate upload progress
+      const error = validateFile(file);
+      if (error) {
+        errors.push(error);
+      } else {
+        // Check for duplicates
+        const isDuplicate = files.some(existingFile => 
+          existingFile.name === file.name && existingFile.size === file.size
+        );
+        
+        if (isDuplicate) {
+          errors.push(`File "${file.name}" is already selected`);
+        } else {
+          validFiles.push(file);
+        }
+      }
+    }
+
+    // Show errors if any
+    if (errors.length > 0) {
+      toast({
+        title: "File Validation Error",
+        description: errors.join('; '),
+        variant: "destructive"
+      });
+    }
+
+    // Process valid files
+    if (validFiles.length > 0) {
+      // Simulate upload progress for each file
+      for (const file of validFiles) {
         setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         
         // Progress simulation
@@ -65,31 +88,29 @@ export const FileUploader = ({
               clearInterval(progressInterval);
               return prev;
             }
-            return { ...prev, [file.name]: currentProgress + 20 };
+            return { ...prev, [file.name]: Math.min(currentProgress + 25, 100) };
           });
-        }, 100);
-
-        validFiles.push(file);
-        
-        // Complete progress after 500ms
-        setTimeout(() => {
-          setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
-        }, 500);
+        }, 150);
       }
-    }
 
-    if (validFiles.length > 0) {
-      onFilesChange(allowMultiple ? [...files, ...validFiles] : validFiles);
+      // Update files list
+      const newFiles = allowMultiple ? [...files, ...validFiles] : validFiles;
+      onFilesChange(newFiles);
+      
       toast({
-        title: "Files uploaded successfully",
-        description: `${validFiles.length} file(s) ready for processing`,
+        title: "Files Added Successfully",
+        description: `${validFiles.length} file${validFiles.length > 1 ? 's' : ''} ready for processing`,
       });
     }
   };
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
-    processFiles(selectedFiles);
+    if (selectedFiles.length > 0) {
+      processFiles(selectedFiles);
+    }
+    // Clear input to allow selecting the same file again
+    event.target.value = '';
   }, [files, onFilesChange, allowMultiple, maxSizeInMB, toast]);
 
   const handleDrop = useCallback((event: React.DragEvent) => {
@@ -97,8 +118,10 @@ export const FileUploader = ({
     setIsDragOver(false);
     
     const droppedFiles = Array.from(event.dataTransfer.files);
-    processFiles(droppedFiles);
-  }, [files, onFilesChange, allowMultiple]);
+    if (droppedFiles.length > 0) {
+      processFiles(droppedFiles);
+    }
+  }, [processFiles]);
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -123,53 +146,62 @@ export const FileUploader = ({
     });
 
     toast({
-      title: "File removed",
+      title: "File Removed",
       description: `${fileToRemove.name} has been removed`,
     });
   };
 
-  const getFileIcon = (file: File) => {
-    return <FileText className="w-5 h-5 text-red-500" />;
-  };
-
   const getFileStatus = (fileName: string) => {
     const progress = uploadProgress[fileName];
-    if (progress === undefined) return null;
-    if (progress === 100) return <CheckCircle className="w-4 h-4 text-green-500" />;
-    if (progress > 0) return <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />;
-    return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+    if (progress === undefined) return <File className="w-5 h-5 text-red-500" />;
+    if (progress === 100) return <CheckCircle className="w-5 h-5 text-green-500" />;
+    if (progress > 0) return <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />;
+    return <AlertCircle className="w-5 h-5 text-yellow-500" />;
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Upload Area */}
-      <div className="space-y-2">
-        <Label htmlFor="file-upload" className="text-base font-semibold">
-          Select {allowMultiple ? 'PDF Files' : 'PDF File'}
+      {/* Upload Area */}
+      <div className="space-y-3">
+        <Label htmlFor="file-upload" className="text-lg font-semibold flex items-center gap-2">
+          <Upload className="w-5 h-5" />
+          Upload {allowMultiple ? 'PDF Files' : 'PDF File'}
         </Label>
+        
         <div 
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
             isDragOver 
-              ? 'border-primary bg-primary/5 scale-[1.02]' 
-              : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+              ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg' 
+              : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20'
           }`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
+          onClick={() => document.getElementById('file-upload')?.click()}
         >
           <div className="space-y-4">
-            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
-              isDragOver ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            <div className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 ${
+              isDragOver 
+                ? 'bg-primary text-primary-foreground scale-110' 
+                : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
             }`}>
-              <Upload className="w-8 h-8" />
+              <Upload className="w-10 h-10" />
             </div>
             
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">
-                {isDragOver ? 'Drop files here' : 'Drag & drop files here'}
+              <h3 className="text-xl font-semibold">
+                {isDragOver ? 'Drop your files here' : 'Drag & drop PDF files here'}
               </h3>
-              <p className="text-sm text-muted-foreground">
-                or click to browse your files
+              <p className="text-muted-foreground">
+                or click to browse your computer
               </p>
             </div>
 
@@ -182,54 +214,59 @@ export const FileUploader = ({
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
 
-            <div className="flex items-center justify-center space-x-4 text-xs text-muted-foreground">
-              <Badge variant="secondary" className="px-3 py-1">
-                Max {maxSizeInMB}MB
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+              <Badge variant="outline" className="px-3 py-1 bg-background">
+                <FileText className="w-4 h-4 mr-1" />
+                PDF files only
+              </Badge>
+              <Badge variant="outline" className="px-3 py-1 bg-background">
+                Max {maxSizeInMB}MB per file
               </Badge>
               {allowMultiple && (
-                <Badge variant="secondary" className="px-3 py-1">
+                <Badge variant="outline" className="px-3 py-1 bg-background">
                   Multiple files supported
                 </Badge>
               )}
-              <Badge variant="secondary" className="px-3 py-1">
-                PDF only
-              </Badge>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Enhanced File List */}
+      {/* File List */}
       {files.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-base font-semibold">
+            <Label className="text-lg font-semibold">
               Selected Files ({files.length})
             </Label>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => {
                 onFilesChange([]);
                 setUploadProgress({});
+                toast({
+                  title: "All Files Cleared",
+                  description: "File selection has been reset",
+                });
               }}
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               Clear All
             </Button>
           </div>
           
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3 max-h-80 overflow-y-auto border rounded-lg p-2">
             {files.map((file, index) => (
-              <div key={index} className="bg-card border rounded-lg p-4 transition-all hover:shadow-md">
+              <div key={`${file.name}-${index}`} className="bg-card border rounded-lg p-4 transition-all hover:shadow-md hover:border-primary/30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    {getFileIcon(file)}
+                    {getFileStatus(file.name)}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{file.name}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
+                      <p className="font-medium truncate text-foreground">{file.name}</p>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {formatFileSize(file.size)}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {new Date(file.lastModified).toLocaleDateString()}
@@ -238,25 +275,25 @@ export const FileUploader = ({
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    {getFileStatus(file.name)}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile(index);
+                    }}
+                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
 
-                {/* Progress bar for uploading files */}
+                {/* Progress bar for individual files */}
                 {uploadProgress[file.name] !== undefined && uploadProgress[file.name] < 100 && (
-                  <div className="mt-3 space-y-1">
+                  <div className="mt-3 space-y-2">
                     <Progress value={uploadProgress[file.name]} className="h-2" />
                     <p className="text-xs text-muted-foreground">
-                      Uploading... {uploadProgress[file.name]}%
+                      Processing... {uploadProgress[file.name]}%
                     </p>
                   </div>
                 )}
@@ -266,25 +303,31 @@ export const FileUploader = ({
         </div>
       )}
 
-      {/* Upload Stats */}
+      {/* Statistics */}
       {files.length > 0 && (
-        <div className="bg-muted/30 rounded-lg p-4">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
+        <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="space-y-1">
               <p className="text-2xl font-bold text-primary">{files.length}</p>
-              <p className="text-xs text-muted-foreground">Files Selected</p>
+              <p className="text-xs text-muted-foreground font-medium">Files Selected</p>
             </div>
-            <div>
+            <div className="space-y-1">
               <p className="text-2xl font-bold text-primary">
-                {(files.reduce((total, file) => total + file.size, 0) / (1024 * 1024)).toFixed(1)}
+                {formatFileSize(files.reduce((total, file) => total + file.size, 0))}
               </p>
-              <p className="text-xs text-muted-foreground">Total MB</p>
+              <p className="text-xs text-muted-foreground font-medium">Total Size</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-green-500">
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-green-600">
                 {Object.values(uploadProgress).filter(p => p === 100).length}
               </p>
-              <p className="text-xs text-muted-foreground">Ready</p>
+              <p className="text-xs text-muted-foreground font-medium">Ready</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-blue-600">
+                {files.reduce((total, file) => total + (file.name.match(/\d+/g) || []).length, files.length)}
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">Est. Pages</p>
             </div>
           </div>
         </div>
