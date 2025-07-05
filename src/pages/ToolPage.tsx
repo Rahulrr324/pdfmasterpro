@@ -25,6 +25,46 @@ const toolConfigs = {
     title: "Compress PDF", 
     description: "Reduce PDF file size while maintaining quality",
     tool: "compress" as const
+  },
+  "rotate-pdf": {
+    title: "Rotate PDF",
+    description: "Rotate pages in your PDF documents",
+    tool: "rotate" as const
+  },
+  "watermark-pdf": {
+    title: "Add Watermark",
+    description: "Add text or image watermarks to PDFs",
+    tool: "watermark" as const
+  },
+  "pdf-to-word": {
+    title: "PDF to Word",
+    description: "Convert PDF documents to editable Word format",
+    tool: "convert" as const
+  },
+  "pdf-to-excel": {
+    title: "PDF to Excel",
+    description: "Extract tables and data to Excel spreadsheets",
+    tool: "convert" as const
+  },
+  "pdf-to-jpg": {
+    title: "PDF to JPG",
+    description: "Convert PDF pages to high-quality images",
+    tool: "convert" as const
+  },
+  "extract-pages": {
+    title: "Extract Pages",
+    description: "Extract specific pages from PDF documents",
+    tool: "extract" as const
+  },
+  "crop-pdf": {
+    title: "Crop PDF",
+    description: "Crop and resize PDF pages",
+    tool: "crop" as const
+  },
+  "edit-pdf": {
+    title: "Edit PDF",
+    description: "Add text, images, and annotations to PDFs",
+    tool: "edit" as const
   }
 };
 

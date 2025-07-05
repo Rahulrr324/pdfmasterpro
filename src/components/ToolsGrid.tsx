@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ToolCard } from "./ToolCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   FileText, 
   Scissors, 
@@ -73,6 +74,7 @@ const tools = [
 export const ToolsGrid = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const categories = [
     { id: "all", label: "All Tools", count: tools.length },
@@ -88,12 +90,19 @@ export const ToolsGrid = () => {
     : tools.filter(tool => tool.category === selectedCategory);
 
   const handleToolClick = (toolId: string) => {
-    const workingTools = ["merge-pdf", "split-pdf", "protect-pdf", "compress-pdf"];
+    const workingTools = [
+      "merge-pdf", "split-pdf", "protect-pdf", "compress-pdf", 
+      "rotate-pdf", "watermark-pdf", "extract-pages", "crop-pdf",
+      "pdf-to-word", "pdf-to-excel", "pdf-to-jpg", "edit-pdf"
+    ];
+    
     if (workingTools.includes(toolId)) {
       navigate(`/tool/${toolId}`);
     } else {
-      // Show coming soon for other tools
-      alert("This tool is coming soon! Try our working tools: Merge PDF, Split PDF, Protect PDF, or Compress PDF.");
+      toast({
+        title: "Coming Soon!",
+        description: "This advanced tool is under development. Try our other working tools!",
+      });
     }
   };
 
