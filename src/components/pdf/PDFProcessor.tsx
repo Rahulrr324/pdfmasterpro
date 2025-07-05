@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { ProgressTracker } from "./ProgressTracker";
 import { PDFToolOptions } from "./PDFToolOptions";
 import { PDFEngine } from "./PDFEngine";
 
-type ProcessingTool = "merge" | "split" | "compress" | "protect" | "convert" | "rotate" | "crop" | "extract" | "watermark" | "edit";
+export type ProcessingTool = "merge" | "split" | "compress" | "protect" | "convert" | "rotate" | "crop" | "extract" | "watermark" | "edit";
 
 interface PDFProcessorProps {
   tool: ProcessingTool;

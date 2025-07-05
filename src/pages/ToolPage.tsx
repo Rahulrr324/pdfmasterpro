@@ -1,7 +1,8 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { PDFProcessor } from "@/components/PDFProcessor";
+import { PDFProcessor } from "@/components/pdf/PDFProcessor";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
