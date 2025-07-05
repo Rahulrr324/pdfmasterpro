@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, X } from "lucide-react";
@@ -22,11 +23,16 @@ export const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground">
-              <span className="text-sm font-bold">PDF</span>
+          <div className="flex items-center space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg">
+              <span className="text-lg font-bold">PM</span>
             </div>
-            <span className="text-xl font-bold text-foreground">PDFTools Pro</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-foreground bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                PdfMaster Pro
+              </span>
+              <span className="text-xs text-muted-foreground -mt-1">Professional PDF Tools</span>
+            </div>
           </div>
 
           {/* Desktop Navigation */}
@@ -35,7 +41,7 @@ export const Header = () => {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:text-orange-500"
               >
                 {item.name}
               </a>

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { FileText, Mail, Shield, Zap } from "lucide-react";
@@ -48,11 +49,16 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Section */}
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground">
-                <FileText className="h-4 w-4" />
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg">
+                <span className="text-lg font-bold">PM</span>
               </div>
-              <span className="text-xl font-bold">PDFTools Pro</span>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                  PdfMaster Pro
+                </span>
+                <span className="text-xs text-muted-foreground -mt-1">Professional PDF Tools</span>
+              </div>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md">
               The most comprehensive PDF toolkit on the web. Convert, edit, organize, and secure 
@@ -60,11 +66,11 @@ export const Footer = () => {
             </p>
             <div className="flex space-x-4">
               <div className="flex items-center space-x-2 text-sm">
-                <Shield className="h-4 w-4 text-security" />
+                <Shield className="h-4 w-4 text-green-600" />
                 <span>100% Secure</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
-                <Zap className="h-4 w-4 text-primary" />
+                <Zap className="h-4 w-4 text-orange-600" />
                 <span>Lightning Fast</span>
               </div>
             </div>
@@ -79,7 +85,7 @@ export const Footer = () => {
                   <li key={linkIndex}>
                     <a 
                       href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-orange-600 transition-colors"
                     >
                       {link}
                     </a>
@@ -96,23 +102,23 @@ export const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} PDFTools Pro. All rights reserved.
+              © {currentYear} PdfMaster Pro. All rights reserved.
             </p>
             <div className="flex space-x-4 text-sm">
-              <a href="#privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a href="#privacy" className="text-muted-foreground hover:text-orange-600 transition-colors">
                 Privacy Policy
               </a>
-              <a href="#terms" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a href="#terms" className="text-muted-foreground hover:text-orange-600 transition-colors">
                 Terms of Service
               </a>
-              <a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a href="#contact" className="text-muted-foreground hover:text-orange-600 transition-colors">
                 Contact
               </a>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-950/20">
               <Mail className="h-4 w-4 mr-2" />
               Newsletter
             </Button>
