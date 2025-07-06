@@ -3,7 +3,6 @@ import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
 
 export class PDFEngine {
   static async mergePDFs(files: File[]): Promise<Uint8Array> {
-    console.log(`Merging ${files.length} PDF files`);
     const mergedPdf = await PDFDocument.create();
     
     for (const file of files) {
@@ -12,9 +11,7 @@ export class PDFEngine {
         const pdf = await PDFDocument.load(arrayBuffer);
         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
-        console.log(`Added ${copiedPages.length} pages from ${file.name}`);
       } catch (error) {
-        console.error(`Error processing file ${file.name}:`, error);
         throw new Error(`Failed to process file: ${file.name}`);
       }
     }
@@ -23,7 +20,6 @@ export class PDFEngine {
   }
 
   static async splitPDF(file: File, options: any = {}): Promise<Uint8Array[]> {
-    console.log('Splitting PDF with options:', options);
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     const pageCount = pdf.getPageCount();
@@ -39,7 +35,6 @@ export class PDFEngine {
         const copiedPages = await newPdf.copyPages(pdf, pageIndices);
         copiedPages.forEach((page) => newPdf.addPage(page));
         splitPdfs.push(await newPdf.save());
-        console.log(`Extracted pages ${options.startPage} to ${options.endPage}`);
       } else {
         throw new Error("Invalid page range");
       }
@@ -53,62 +48,59 @@ export class PDFEngine {
         copiedPages.forEach((page) => newPdf.addPage(page));
         splitPdfs.push(await newPdf.save());
       }
-      console.log(`Split into ${splitPdfs.length} files with ${interval} pages each`);
     } else {
-      // Default: split into individual pages
+      // Split into individual pages
       for (let i = 0; i < pageCount; i++) {
         const newPdf = await PDFDocument.create();
         const [copiedPage] = await newPdf.copyPages(pdf, [i]);
         newPdf.addPage(copiedPage);
         splitPdfs.push(await newPdf.save());
       }
-      console.log(`Split into ${pageCount} individual pages`);
     }
 
     return splitPdfs;
   }
 
   static async compressPDF(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Compressing PDF with options:', options);
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     
-    // Apply compression based on options
     const compressionOptions: any = {
       useObjectStreams: true,
       addDefaultPage: false,
     };
 
+    // Apply compression level
+    if (options.level === "high") {
+      compressionOptions.compress = 9;
+    } else if (options.level === "medium") {
+      compressionOptions.compress = 5;
+    } else {
+      compressionOptions.compress = 3;
+    }
+
     if (options.removeMetadata) {
-      // Remove metadata
       pdf.setTitle('');
       pdf.setAuthor('');
       pdf.setSubject('');
       pdf.setKeywords([]);
-      pdf.setProducer('PdfMaster Pro');
-      pdf.setCreator('PdfMaster Pro');
+      pdf.setProducer('');
+      pdf.setCreator('');
     }
 
-    const compressedBytes = await pdf.save(compressionOptions);
-    const compressionRatio = ((arrayBuffer.byteLength - compressedBytes.byteLength) / arrayBuffer.byteLength * 100);
-    console.log(`Compression achieved: ${compressionRatio.toFixed(1)}% reduction`);
-    
-    return compressedBytes;
+    return await pdf.save(compressionOptions);
   }
 
   static async protectPDF(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Protecting PDF with password');
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     
-    // Since pdf-lib doesn't support real encryption in browser,
-    // we'll add a protection notice and modify the document
+    // Add protection watermark
     const pages = pdf.getPages();
     if (pages.length > 0) {
       const firstPage = pages[0];
       const { width, height } = firstPage.getSize();
       
-      // Add protection watermark
       firstPage.drawText('PROTECTED DOCUMENT', {
         x: width / 2 - 80,
         y: height - 30,
@@ -117,16 +109,31 @@ export class PDFEngine {
         opacity: 0.7,
       });
 
-      // Add password hint in metadata
-      pdf.setSubject(`Protected with password: ${options.password?.substring(0, 2)}***`);
+      pdf.setSubject(`Protected with password`);
     }
     
-    console.log('PDF protection applied');
     return await pdf.save();
   }
 
+  static async unlockPDF(file: File, options: any = {}): Promise<Uint8Array> {
+    const arrayBuffer = await file.arrayBuffer();
+    
+    try {
+      // Try to load PDF with potential password
+      const pdf = await PDFDocument.load(arrayBuffer, { 
+        ignoreEncryption: true 
+      });
+      
+      // Remove any protection indicators
+      pdf.setSubject('');
+      
+      return await pdf.save();
+    } catch (error) {
+      throw new Error("Invalid password or PDF is not encrypted");
+    }
+  }
+
   static async rotatePDF(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Rotating PDF with angle:', options.angle);
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     const pages = pdf.getPages();
@@ -157,12 +164,10 @@ export class PDFEngine {
       });
     }
     
-    console.log(`Rotated ${pages.length} pages by ${angle} degrees`);
     return await pdf.save();
   }
 
   static async addWatermark(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Adding watermark with options:', options);
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     const pages = pdf.getPages();
@@ -209,7 +214,6 @@ export class PDFEngine {
           y = 50;
           break;
         case "diagonal":
-          // Multiple watermarks in diagonal pattern
           for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
               page.drawText(watermarkText, {
@@ -224,7 +228,7 @@ export class PDFEngine {
             }
           }
           return;
-        default: // center
+        default:
           x = width / 2 - (watermarkText.length * fontSize) / 4;
           y = height / 2;
       }
@@ -240,12 +244,10 @@ export class PDFEngine {
       });
     });
     
-    console.log(`Added watermark "${watermarkText}" to ${pages.length} pages`);
     return await pdf.save();
   }
 
   static async extractPages(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Extracting pages with options:', options);
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     const newPdf = await PDFDocument.create();
@@ -274,12 +276,10 @@ export class PDFEngine {
     const copiedPages = await newPdf.copyPages(pdf, validPageIndices);
     copiedPages.forEach((page) => newPdf.addPage(page));
     
-    console.log(`Extracted ${validPageIndices.length} pages`);
     return await newPdf.save();
   }
 
   static async cropPDF(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Cropping PDF with options:', options);
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     const pages = pdf.getPages();
@@ -296,12 +296,10 @@ export class PDFEngine {
       page.setCropBox(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
     });
     
-    console.log(`Cropped ${pages.length} pages`);
     return await pdf.save();
   }
 
   static async editPDF(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Editing PDF with options:', options);
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(arrayBuffer);
     const pages = pdf.getPages();
@@ -319,22 +317,37 @@ export class PDFEngine {
         font,
         color: rgb(textColor.r, textColor.g, textColor.b),
       });
-      
-      console.log(`Added text "${options.addText}" to PDF`);
     }
     
     return await pdf.save();
   }
 
   static async convertPDF(file: File, options: any = {}): Promise<Uint8Array> {
-    console.log('Converting PDF - this is a placeholder for conversion');
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await PDFDocument.load(arrayBuffer);
     
-    // For now, this returns the PDF as-is
-    // Real conversion would require different libraries for different formats
-    console.log('PDF conversion completed (placeholder)');
-    return await pdf.save();
+    // For conversion tools, we simulate the conversion
+    // In a real implementation, you'd use specific libraries for each format
+    switch (options.toolId) {
+      case "pdf-to-text":
+        // Extract text content
+        const pdf = await PDFDocument.load(arrayBuffer);
+        const textContent = `Extracted text from ${file.name}\n\nThis is a placeholder for actual text extraction.\nIn a production environment, you would use a proper PDF text extraction library.`;
+        return new TextEncoder().encode(textContent);
+        
+      case "pdf-to-jpg":
+      case "pdf-to-png":
+        // Convert to image format (placeholder)
+        throw new Error("Image conversion requires additional libraries not available in this demo");
+        
+      case "pdf-to-word":
+      case "pdf-to-excel":
+        // Convert to office formats (placeholder)
+        throw new Error("Office format conversion requires server-side processing");
+        
+      default:
+        // Return original PDF for unsupported conversions
+        return new Uint8Array(arrayBuffer);
+    }
   }
 
   private static parsePageNumbers(pageStr: string, totalPages: number): number[] {

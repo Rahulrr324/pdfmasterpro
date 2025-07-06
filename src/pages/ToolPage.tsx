@@ -37,6 +37,11 @@ const toolConfigs = {
     description: "Add password protection to your PDF documents",
     tool: "protect" as const
   },
+  "unlock-pdf": {
+    title: "Unlock PDF",
+    description: "Remove password protection from PDF documents",
+    tool: "unlock" as const
+  },
   "watermark-pdf": {
     title: "Add Watermark",
     description: "Add text or image watermarks to PDFs",
@@ -52,6 +57,11 @@ const toolConfigs = {
     description: "Add text, images, and annotations to PDFs",
     tool: "edit" as const
   },
+  "view-pdf": {
+    title: "View PDF",
+    description: "Preview PDF documents with zoom and navigation",
+    tool: "view" as const
+  },
   "pdf-to-word": {
     title: "PDF to Word",
     description: "Convert PDF documents to editable Word format",
@@ -65,6 +75,36 @@ const toolConfigs = {
   "pdf-to-jpg": {
     title: "PDF to JPG",
     description: "Convert PDF pages to high-quality images",
+    tool: "convert" as const
+  },
+  "pdf-to-png": {
+    title: "PDF to PNG",
+    description: "Convert PDF pages to PNG image format",
+    tool: "convert" as const
+  },
+  "pdf-to-text": {
+    title: "PDF to Text",
+    description: "Extract text content from PDF documents",
+    tool: "convert" as const
+  },
+  "word-to-pdf": {
+    title: "Word to PDF",
+    description: "Convert Word documents to PDF format",
+    tool: "convert" as const
+  },
+  "excel-to-pdf": {
+    title: "Excel to PDF",
+    description: "Convert Excel spreadsheets to PDF format",
+    tool: "convert" as const
+  },
+  "image-to-pdf": {
+    title: "Image to PDF",
+    description: "Convert JPG, PNG images to PDF documents",
+    tool: "convert" as const
+  },
+  "html-to-pdf": {
+    title: "HTML to PDF",
+    description: "Convert web pages and HTML to PDF",
     tool: "convert" as const
   }
 };
@@ -112,6 +152,7 @@ export default function ToolPage() {
             tool={config.tool}
             title={config.title}
             description={config.description}
+            toolId={toolId}
           />
         </div>
       </main>

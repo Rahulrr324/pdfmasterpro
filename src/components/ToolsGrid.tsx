@@ -13,7 +13,14 @@ import {
   Download,
   Crop,
   Edit3,
-  Layers
+  Layers,
+  Lock,
+  Unlock,
+  FileUp,
+  FileDown,
+  Image,
+  Type,
+  FilePlus
 } from "lucide-react";
 
 const tools = [
@@ -72,6 +79,15 @@ const tools = [
     isPremium: false
   },
   {
+    id: "unlock-pdf",
+    title: "Unlock PDF",
+    description: "Remove password protection from PDF documents", 
+    icon: Unlock,
+    category: "security" as const,
+    isNew: true,
+    isPremium: false
+  },
+  {
     id: "watermark-pdf",
     title: "Add Watermark",
     description: "Add text or image watermarks to PDFs",
@@ -95,8 +111,98 @@ const tools = [
     description: "Add text, images, and annotations to PDFs",
     icon: Edit3,
     category: "edit" as const,
-    isNew: true,
+    isNew: false,
     isPremium: true
+  },
+  {
+    id: "view-pdf",
+    title: "View PDF",
+    description: "Preview PDF documents with zoom and navigation",
+    icon: Eye,
+    category: "edit" as const,
+    isNew: true,
+    isPremium: false
+  },
+  {
+    id: "pdf-to-word",
+    title: "PDF to Word",
+    description: "Convert PDF documents to editable Word format",
+    icon: FileText,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "pdf-to-excel",
+    title: "PDF to Excel",
+    description: "Extract tables and data to Excel spreadsheets",
+    icon: FileSpreadsheet,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "pdf-to-jpg",
+    title: "PDF to JPG",
+    description: "Convert PDF pages to high-quality images",
+    icon: FileImage,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "pdf-to-png",
+    title: "PDF to PNG",
+    description: "Convert PDF pages to PNG image format",
+    icon: Image,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "pdf-to-text",
+    title: "PDF to Text",
+    description: "Extract text content from PDF documents",
+    icon: Type,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "word-to-pdf",
+    title: "Word to PDF",
+    description: "Convert Word documents to PDF format",
+    icon: FileUp,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "excel-to-pdf",
+    title: "Excel to PDF",
+    description: "Convert Excel spreadsheets to PDF format",
+    icon: FileUp,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "image-to-pdf",
+    title: "Image to PDF",
+    description: "Convert JPG, PNG images to PDF documents",
+    icon: FilePlus,
+    category: "convert" as const,
+    isNew: false,
+    isPremium: false
+  },
+  {
+    id: "html-to-pdf",
+    title: "HTML to PDF",
+    description: "Convert web pages and HTML to PDF",
+    icon: FileDown,
+    category: "convert" as const,
+    isNew: true,
+    isPremium: false
   }
 ];
 
@@ -119,7 +225,7 @@ export const ToolsGrid = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {tools.map((tool) => (
             <ToolCard
               key={tool.id}

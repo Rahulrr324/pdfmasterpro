@@ -2,7 +2,7 @@
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, AlertCircle, FileText, Download, Settings, Zap, Shield } from "lucide-react";
+import { CheckCircle, Clock, AlertCircle, FileText, Download, Settings, Zap, Shield, TrendingDown } from "lucide-react";
 
 interface ProgressTrackerProps {
   isProcessing: boolean;
@@ -11,6 +11,7 @@ interface ProgressTrackerProps {
   error?: string;
   totalFiles?: number;
   processedFiles?: number;
+  compressionStats?: {before: number, after: number} | null;
 }
 
 export const ProgressTracker = ({ 
@@ -19,9 +20,10 @@ export const ProgressTracker = ({
   currentStep, 
   error,
   totalFiles = 1,
-  processedFiles = 0
+  processedFiles = 0,
+  compressionStats
 }: ProgressTrackerProps) => {
-  if (!isProcessing && progress === 0 && !error) return null;
+  if (!isProcessing && progress === 0 && !error && !compressionStats) return null;
 
   const getProgressColor = () => {
     if (error) return "bg-destructive";
@@ -36,7 +38,7 @@ export const ProgressTracker = ({
     if (progress === 100) return <CheckCircle className="w-6 h-6 text-green-500" />;
     if (currentStep?.includes("Processing")) return <Zap className="w-6 h-6 text-primary animate-pulse" />;
     if (currentStep?.includes("download") || currentStep?.includes("Preparing")) return <Download className="w-6 h-6 text-primary animate-bounce" />;
-    if (currentStep?.includes("Loading")) return <FileText className="w-6 h-6 text-primary animate-pulse" />;
+    if (currentStep?.includes("Loading") || currentStep?.includes("files")) return <FileText className="w-6 h-6 text-primary animate-pulse" />;
     return <Settings className="w-6 h-6 text-primary animate-spin" />;
   };
 
@@ -63,6 +65,14 @@ export const ProgressTracker = ({
     return `~${minutes}m remaining`;
   };
 
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-background via-muted/30 to-background rounded-xl border-2 border-muted shadow-lg">
       {/* Header */}
@@ -73,7 +83,7 @@ export const ProgressTracker = ({
           </div>
           <div className="space-y-1">
             <h3 className="font-bold text-xl text-foreground">
-              {error ? "Processing Failed" : progress === 100 ? "Processing Complete!" : "Processing PDF"}
+              {error ? "Processing Failed" : progress === 100 ? "Processing Complete!" : "Processing Files"}
             </h3>
             <p className="text-muted-foreground">
               {error ? error : currentStep || `${getProgressPhase()}...`}
@@ -103,26 +113,53 @@ export const ProgressTracker = ({
       </div>
 
       {/* Progress Bar */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <Label className="font-semibold text-base">Progress</Label>
-          <span className="text-lg font-bold text-primary">{progress}%</span>
-        </div>
-        <div className="relative">
-          <Progress value={progress} className="h-4 bg-muted" />
-          <div 
-            className={`absolute top-0 left-0 h-4 rounded-full transition-all duration-700 ease-out ${getProgressColor()}`}
-            style={{ width: `${progress}%` }}
-          />
-          {/* Animated shimmer effect */}
-          {isProcessing && !error && progress < 100 && (
+      {(isProcessing || progress > 0) && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <Label className="font-semibold text-base">Progress</Label>
+            <span className="text-lg font-bold text-primary">{progress}%</span>
+          </div>
+          <div className="relative">
+            <Progress value={progress} className="h-4 bg-muted" />
             <div 
-              className="absolute top-0 h-4 w-8 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full animate-pulse"
-              style={{ left: `${Math.max(0, progress - 8)}%` }}
+              className={`absolute top-0 left-0 h-4 rounded-full transition-all duration-700 ease-out ${getProgressColor()}`}
+              style={{ width: `${progress}%` }}
             />
-          )}
+            {/* Animated shimmer effect */}
+            {isProcessing && !error && progress < 100 && (
+              <div 
+                className="absolute top-0 h-4 w-8 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full animate-pulse"
+                style={{ left: `${Math.max(0, progress - 8)}%` }}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Compression Stats */}
+      {compressionStats && (
+        <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full">
+                <TrendingDown className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-green-800 dark:text-green-200">Compression Results</p>
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  Reduced from {formatFileSize(compressionStats.before)} to {formatFileSize(compressionStats.after)}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                -{Math.round((1 - compressionStats.after / compressionStats.before) * 100)}%
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400">size reduction</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* File Processing Status */}
       {totalFiles > 1 && (
@@ -195,7 +232,7 @@ export const ProgressTracker = ({
             <p className="font-semibold text-destructive">Processing failed</p>
             <p className="text-sm text-destructive/80 leading-relaxed">{error}</p>
             <p className="text-xs text-muted-foreground mt-2">
-              Please check your PDF files and try again. If the problem persists, try with a different file.
+              Please check your files and try again. If the problem persists, try with a different file.
             </p>
           </div>
         </div>

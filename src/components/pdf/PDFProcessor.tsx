@@ -4,49 +4,53 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { saveAs } from "file-saver";
-import { Download, FileText, Merge, Scissors, Lock, RotateCcw, Archive, Eye, AlertTriangle } from "lucide-react";
+import { Download, FileText, Merge, Scissors, Lock, RotateCcw, Archive, Eye, AlertTriangle, Unlock } from "lucide-react";
 import { FileUploader } from "./FileUploader";
 import { ProgressTracker } from "./ProgressTracker";
 import { PDFToolOptions } from "./PDFToolOptions";
 import { PDFEngine } from "./PDFEngine";
 
-export type ProcessingTool = "merge" | "split" | "compress" | "protect" | "convert" | "rotate" | "crop" | "extract" | "watermark" | "edit";
+export type ProcessingTool = "merge" | "split" | "compress" | "protect" | "unlock" | "convert" | "rotate" | "crop" | "extract" | "watermark" | "edit" | "view";
 
 interface PDFProcessorProps {
   tool: ProcessingTool;
   title: string;
   description: string;
+  toolId?: string;
 }
 
-export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) => {
+export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState("");
   const [error, setError] = useState<string>("");
   const [options, setOptions] = useState<Record<string, any>>({});
+  const [compressionStats, setCompressionStats] = useState<{before: number, after: number} | null>(null);
   const { toast } = useToast();
 
   const validateFiles = useCallback(() => {
     if (files.length === 0) {
-      throw new Error("Please select PDF files to process");
+      throw new Error("Please select files to process");
     }
 
     if (tool === "merge" && files.length < 2) {
       throw new Error("Please select at least 2 files to merge");
     }
 
-    if (tool !== "merge" && files.length > 1) {
+    if (["split", "rotate", "compress", "extract", "protect", "unlock", "watermark", "crop", "edit", "view"].includes(tool) && files.length > 1) {
       throw new Error("This tool only accepts one file at a time");
     }
 
-    // Validate file types
+    // Validate file types based on tool
     for (const file of files) {
-      if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+      if (tool === "image-to-pdf" && !file.type.includes('image')) {
+        throw new Error(`${file.name} is not a valid image file`);
+      } else if (tool !== "image-to-pdf" && !file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
         throw new Error(`${file.name} is not a valid PDF file`);
       }
       
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+      if (file.size > 50 * 1024 * 1024) {
         throw new Error(`${file.name} is too large. Maximum size is 50MB`);
       }
     }
@@ -54,6 +58,10 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
     // Tool-specific validations
     if (tool === "protect" && !options.password) {
       throw new Error("Please enter a password to protect the PDF");
+    }
+
+    if (tool === "unlock" && !options.password) {
+      throw new Error("Please enter the password to unlock the PDF");
     }
 
     if (tool === "split" && options.mode === "range") {
@@ -81,6 +89,7 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
     setError("");
     setProgress(0);
     setCurrentStep("");
+    setCompressionStats(null);
 
     try {
       validateFiles();
@@ -89,17 +98,17 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
       setCurrentStep("Initializing...");
       setProgress(5);
 
-      // Simulate initialization delay
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      setCurrentStep("Loading PDF files...");
+      setCurrentStep("Loading files...");
       setProgress(15);
 
       let result: Uint8Array | Uint8Array[];
       let filename: string;
       let isMultipleFiles = false;
+      const originalSize = files.reduce((total, file) => total + file.size, 0);
 
-      setCurrentStep("Processing PDF...");
+      setCurrentStep("Processing...");
       setProgress(30);
 
       switch (tool) {
@@ -119,12 +128,22 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
         case "compress":
           result = await PDFEngine.compressPDF(files[0], options);
           filename = `compressed-${files[0].name}`;
+          setCompressionStats({
+            before: originalSize,
+            after: (result as Uint8Array).byteLength
+          });
           setProgress(70);
           break;
           
         case "protect":
           result = await PDFEngine.protectPDF(files[0], options);
           filename = `protected-${files[0].name}`;
+          setProgress(70);
+          break;
+
+        case "unlock":
+          result = await PDFEngine.unlockPDF(files[0], options);
+          filename = `unlocked-${files[0].name}`;
           setProgress(70);
           break;
 
@@ -158,9 +177,19 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
           setProgress(70);
           break;
 
+        case "view":
+          // For view mode, we don't process, just display
+          setProgress(100);
+          setCurrentStep("PDF loaded for viewing");
+          toast({
+            title: "PDF Loaded",
+            description: "Your PDF is now ready for viewing",
+          });
+          return;
+
         case "convert":
-          result = await PDFEngine.convertPDF(files[0], options);
-          filename = `converted-${files[0].name}`;
+          result = await PDFEngine.convertPDF(files[0], { ...options, toolId });
+          filename = getConvertedFilename(files[0].name, toolId);
           setProgress(70);
           break;
           
@@ -183,12 +212,13 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
           description: `${result.length} files have been processed and downloaded`,
         });
       } else {
-        const blob = new Blob([result], { type: "application/pdf" });
+        const mimeType = getMimeType(toolId);
+        const blob = new Blob([result], { type: mimeType });
         saveAs(blob, filename);
         
         toast({
           title: "Success!",
-          description: "Your PDF has been processed and downloaded",
+          description: `Your file has been processed and downloaded${compressionStats ? ` (${Math.round((1 - compressionStats.after / compressionStats.before) * 100)}% smaller)` : ''}`,
         });
       }
 
@@ -196,7 +226,6 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
       setCurrentStep("Complete!");
 
     } catch (error) {
-      console.error("Processing error:", error);
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       setError(errorMessage);
       
@@ -215,11 +244,35 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
     }
   };
 
+  const getConvertedFilename = (originalName: string, toolId?: string): string => {
+    const baseName = originalName.replace(/\.[^/.]+$/, "");
+    switch (toolId) {
+      case "pdf-to-word": return `${baseName}.docx`;
+      case "pdf-to-excel": return `${baseName}.xlsx`;
+      case "pdf-to-jpg": return `${baseName}.jpg`;
+      case "pdf-to-png": return `${baseName}.png`;
+      case "pdf-to-text": return `${baseName}.txt`;
+      default: return `converted-${originalName}`;
+    }
+  };
+
+  const getMimeType = (toolId?: string): string => {
+    switch (toolId) {
+      case "pdf-to-word": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      case "pdf-to-excel": return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      case "pdf-to-jpg": return "image/jpeg";
+      case "pdf-to-png": return "image/png";
+      case "pdf-to-text": return "text/plain";
+      default: return "application/pdf";
+    }
+  };
+
   const getIcon = () => {
     switch (tool) {
       case "merge": return Merge;
       case "split": return Scissors;
       case "protect": return Lock;
+      case "unlock": return Unlock;
       case "compress": return Archive;
       case "rotate": return RotateCcw;
       case "watermark": return Eye;
@@ -228,7 +281,8 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
   };
 
   const Icon = getIcon();
-  const allowMultiple = tool === "merge";
+  const allowMultiple = tool === "merge" || tool === "image-to-pdf";
+  const acceptedTypes = toolId?.includes("image-to-pdf") ? "image/*" : ".pdf";
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg">
@@ -249,6 +303,7 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
           files={files}
           onFilesChange={setFiles}
           allowMultiple={allowMultiple}
+          acceptedTypes={acceptedTypes}
           maxSizeInMB={50}
         />
 
@@ -256,6 +311,7 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
           tool={tool}
           options={options}
           onOptionsChange={setOptions}
+          toolId={toolId}
         />
 
         <ProgressTracker
@@ -265,6 +321,7 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
           error={error}
           totalFiles={files.length}
           processedFiles={isProcessing ? Math.floor(progress / 100 * files.length) : 0}
+          compressionStats={compressionStats}
         />
 
         <div className="flex flex-col gap-4">
@@ -282,7 +339,7 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
             ) : (
               <div className="flex items-center gap-2">
                 <Download className="w-5 h-5" />
-                Process PDF{files.length > 1 ? 's' : ''}
+                {tool === "view" ? "View PDF" : `Process ${files.length > 1 ? 'Files' : 'File'}`}
               </div>
             )}
           </Button>
@@ -290,7 +347,7 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
           {files.length === 0 && (
             <div className="flex items-center gap-2 text-muted-foreground text-sm justify-center">
               <AlertTriangle className="w-4 h-4" />
-              Please upload PDF files to get started
+              Please upload files to get started
             </div>
           )}
         </div>
@@ -306,7 +363,7 @@ export const PDFProcessor = ({ tool, title, description }: PDFProcessorProps) =>
               </p>
               <p className="text-green-700 dark:text-green-300 text-xs leading-relaxed">
                 All PDF processing happens locally in your browser. Your files are never uploaded to our servers 
-                and are automatically cleared from memory after processing. We never store or access your documents.
+                and are automatically cleared from memory after processing.
               </p>
             </div>
           </div>

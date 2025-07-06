@@ -26,33 +26,30 @@ export default defineConfig(({ mode }) => ({
     assetsDir: 'assets',
     sourcemap: false,
     minify: 'terser',
-    target: 'es2015', // Better compatibility
+    target: 'es2015',
     rollupOptions: {
       output: {
         manualChunks: {
           'pdf-lib': ['pdf-lib'],
           'react-vendor': ['react', 'react-dom'],
           'ui-vendor': ['@radix-ui/react-toast', '@radix-ui/react-progress', '@radix-ui/react-select'],
-          'file-utils': ['file-saver']
+          'file-utils': ['file-saver', 'react-dropzone']
         },
-        // Optimize for web hosting
         entryFileNames: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash].[ext]'
       }
     },
     chunkSizeWarningLimit: 1000,
-    // Additional optimizations for InfinityFree
     cssCodeSplit: true,
-    assetsInlineLimit: 4096, // Inline small assets
+    assetsInlineLimit: 4096,
   },
-  base: './', // Important for InfinityFree hosting
+  base: './', // Critical for InfinityFree static hosting
   define: {
-    // Ensure compatibility
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'pdf-lib', 'file-saver'],
-    exclude: ['lucide-react'] // Tree-shake unused icons
+    include: ['react', 'react-dom', 'pdf-lib', 'file-saver', 'react-dropzone'],
+    exclude: ['lucide-react']
   }
 }));

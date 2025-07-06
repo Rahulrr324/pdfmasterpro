@@ -3,7 +3,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProcessingTool } from "./PDFProcessor";
@@ -12,9 +11,10 @@ interface PDFToolOptionsProps {
   tool: ProcessingTool;
   options: Record<string, any>;
   onOptionsChange: (options: Record<string, any>) => void;
+  toolId?: string;
 }
 
-export const PDFToolOptions = ({ tool, options, onOptionsChange }: PDFToolOptionsProps) => {
+export const PDFToolOptions = ({ tool, options, onOptionsChange, toolId }: PDFToolOptionsProps) => {
   const updateOption = (key: string, value: any) => {
     onOptionsChange({ ...options, [key]: value });
   };
@@ -140,8 +140,22 @@ export const PDFToolOptions = ({ tool, options, onOptionsChange }: PDFToolOption
         <CardTitle className="text-lg">Compression Options</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Compression Level</Label>
+          <Select value={options.level || "medium"} onValueChange={(value) => updateOption("level", value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select compression level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low (Larger file, better quality)</SelectItem>
+              <SelectItem value="medium">Medium (Balanced)</SelectItem>
+              <SelectItem value="high">High (Smaller file, lower quality)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="space-y-3">
-          <Label>Compression Quality</Label>
+          <Label>Quality</Label>
           <div className="px-2">
             <Slider
               value={[options.quality || 80]}
@@ -302,6 +316,81 @@ export const PDFToolOptions = ({ tool, options, onOptionsChange }: PDFToolOption
     </Card>
   );
 
+  const renderUnlockOptions = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Unlock PDF</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="unlockPassword">Current Password</Label>
+          <Input
+            id="unlockPassword"
+            type="password"
+            value={options.password || ""}
+            onChange={(e) => updateOption("password", e.target.value)}
+            placeholder="Enter current password"
+          />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Enter the password to remove protection from the PDF document.
+        </p>
+      </CardContent>
+    </Card>
+  );
+
+  const renderConvertOptions = () => {
+    if (!toolId) return null;
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Conversion Options</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {toolId.includes("pdf-to-") && (
+            <div className="space-y-2">
+              <Label>Output Quality</Label>
+              <Select value={options.quality || "high"} onValueChange={(value) => updateOption("quality", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select quality" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low Quality (Faster)</SelectItem>
+                  <SelectItem value="medium">Medium Quality</SelectItem>
+                  <SelectItem value="high">High Quality (Slower)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {toolId.includes("-to-pdf") && (
+            <div className="space-y-2">
+              <Label>Page Size</Label>
+              <Select value={options.pageSize || "A4"} onValueChange={(value) => updateOption("pageSize", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select page size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A4">A4</SelectItem>
+                  <SelectItem value="Letter">Letter</SelectItem>
+                  <SelectItem value="Legal">Legal</SelectItem>
+                  <SelectItem value="A3">A3</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <p className="text-sm text-muted-foreground">
+            {toolId.includes("pdf-to-") 
+              ? "Convert your PDF to the selected format with the specified quality settings."
+              : "Convert your files to PDF format with the selected page size."}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  };
+
   const renderOptions = () => {
     switch (tool) {
       case "split":
@@ -316,6 +405,10 @@ export const PDFToolOptions = ({ tool, options, onOptionsChange }: PDFToolOption
         return renderWatermarkOptions();
       case "protect":
         return renderProtectOptions();
+      case "unlock":
+        return renderUnlockOptions();
+      case "convert":
+        return renderConvertOptions();
       default:
         return null;
     }
