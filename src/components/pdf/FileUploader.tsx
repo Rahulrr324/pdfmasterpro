@@ -1,8 +1,7 @@
 
 import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Upload, X, FileText, AlertCircle, CheckCircle, File } from "lucide-react";
@@ -24,7 +23,6 @@ export const FileUploader = ({
   maxSizeInMB = 50 
 }: FileUploaderProps) => {
   const { toast } = useToast();
-  const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
   const validateFile = (file: File): string | null => {
@@ -52,7 +50,6 @@ export const FileUploader = ({
       if (error) {
         errors.push(error);
       } else {
-        // Check for duplicates
         const isDuplicate = files.some(existingFile => 
           existingFile.name === file.name && existingFile.size === file.size
         );
@@ -65,7 +62,6 @@ export const FileUploader = ({
       }
     }
 
-    // Show errors if any
     if (errors.length > 0) {
       toast({
         title: "File Validation Error",
@@ -74,13 +70,10 @@ export const FileUploader = ({
       });
     }
 
-    // Process valid files
     if (validFiles.length > 0) {
-      // Simulate upload progress for each file
       for (const file of validFiles) {
         setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         
-        // Progress simulation
         const progressInterval = setInterval(() => {
           setUploadProgress(prev => {
             const currentProgress = prev[file.name] || 0;
@@ -93,7 +86,6 @@ export const FileUploader = ({
         }, 150);
       }
 
-      // Update files list
       const newFiles = allowMultiple ? [...files, ...validFiles] : validFiles;
       onFilesChange(newFiles);
       
@@ -104,41 +96,24 @@ export const FileUploader = ({
     }
   };
 
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files || []);
-    if (selectedFiles.length > 0) {
-      processFiles(selectedFiles);
-    }
-    // Clear input to allow selecting the same file again
-    event.target.value = '';
-  }, [files, onFilesChange, allowMultiple, maxSizeInMB, toast]);
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    processFiles(acceptedFiles);
+  }, [files, allowMultiple]);
 
-  const handleDrop = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    setIsDragOver(false);
-    
-    const droppedFiles = Array.from(event.dataTransfer.files);
-    if (droppedFiles.length > 0) {
-      processFiles(droppedFiles);
-    }
-  }, [processFiles]);
-
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    setIsDragOver(false);
-  }, []);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf']
+    },
+    multiple: allowMultiple,
+    maxSize: maxSizeInMB * 1024 * 1024
+  });
 
   const removeFile = (index: number) => {
     const fileToRemove = files[index];
     const newFiles = files.filter((_, i) => i !== index);
     onFilesChange(newFiles);
     
-    // Remove progress tracking
     setUploadProgress(prev => {
       const newProgress = { ...prev };
       delete newProgress[fileToRemove.name];
@@ -153,7 +128,7 @@ export const FileUploader = ({
 
   const getFileStatus = (fileName: string) => {
     const progress = uploadProgress[fileName];
-    if (progress === undefined) return <File className="w-5 h-5 text-red-500" />;
+    if (progress === undefined) return <File className="w-5 h-5 text-muted-foreground" />;
     if (progress === 100) return <CheckCircle className="w-5 h-5 text-green-500" />;
     if (progress > 0) return <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />;
     return <AlertCircle className="w-5 h-5 text-yellow-500" />;
@@ -171,25 +146,18 @@ export const FileUploader = ({
     <div className="space-y-6">
       {/* Upload Area */}
       <div className="space-y-3">
-        <Label htmlFor="file-upload" className="text-lg font-semibold flex items-center gap-2">
-          <Upload className="w-5 h-5" />
-          Upload {allowMultiple ? 'PDF Files' : 'PDF File'}
-        </Label>
-        
         <div 
+          {...getRootProps()}
           className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
-            isDragOver 
+            isDragActive
               ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg' 
               : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20'
           }`}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onClick={() => document.getElementById('file-upload')?.click()}
         >
+          <input {...getInputProps()} />
           <div className="space-y-4">
             <div className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 ${
-              isDragOver 
+              isDragActive
                 ? 'bg-primary text-primary-foreground scale-110' 
                 : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
             }`}>
@@ -198,21 +166,12 @@ export const FileUploader = ({
             
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">
-                {isDragOver ? 'Drop your files here' : 'Drag & drop PDF files here'}
+                {isDragActive ? 'Drop your files here' : 'Drag & drop PDF files here'}
               </h3>
               <p className="text-muted-foreground">
                 or click to browse your computer
               </p>
             </div>
-
-            <Input
-              id="file-upload"
-              type="file"
-              accept={acceptedTypes}
-              multiple={allowMultiple}
-              onChange={handleFileSelect}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
 
             <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
               <Badge variant="outline" className="px-3 py-1 bg-background">
@@ -236,9 +195,9 @@ export const FileUploader = ({
       {files.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold">
               Selected Files ({files.length})
-            </Label>
+            </h3>
             <Button
               variant="outline"
               size="sm"
@@ -288,7 +247,6 @@ export const FileUploader = ({
                   </Button>
                 </div>
 
-                {/* Progress bar for individual files */}
                 {uploadProgress[file.name] !== undefined && uploadProgress[file.name] < 100 && (
                   <div className="mt-3 space-y-2">
                     <Progress value={uploadProgress[file.name]} className="h-2" />
@@ -325,7 +283,7 @@ export const FileUploader = ({
             </div>
             <div className="space-y-1">
               <p className="text-2xl font-bold text-blue-600">
-                {files.reduce((total, file) => total + (file.name.match(/\d+/g) || []).length, files.length)}
+                {files.length * 10} {/* Estimate */}
               </p>
               <p className="text-xs text-muted-foreground font-medium">Est. Pages</p>
             </div>

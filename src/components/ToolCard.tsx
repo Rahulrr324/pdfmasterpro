@@ -9,18 +9,19 @@ interface ToolCardProps {
   title: string;
   description: string;
   icon: LucideIcon;
-  category: "convert" | "edit" | "organize" | "security" | "ai";
+  category: "convert" | "edit" | "organize" | "security" | "ai" | "optimize";
   isNew?: boolean;
   isPremium?: boolean;
   onClick?: () => void;
 }
 
 const categoryColors = {
-  convert: "bg-convert/10 text-convert border-convert/20",
-  edit: "bg-edit/10 text-edit border-edit/20", 
-  organize: "bg-organize/10 text-organize border-organize/20",
-  security: "bg-security/10 text-security border-security/20",
-  ai: "bg-ai/10 text-ai border-ai/20"
+  convert: "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-300 dark:border-blue-800",
+  edit: "bg-green-500/10 text-green-700 border-green-200 dark:text-green-300 dark:border-green-800", 
+  organize: "bg-purple-500/10 text-purple-700 border-purple-200 dark:text-purple-300 dark:border-purple-800",
+  security: "bg-red-500/10 text-red-700 border-red-200 dark:text-red-300 dark:border-red-800",
+  ai: "bg-orange-500/10 text-orange-700 border-orange-200 dark:text-orange-300 dark:border-orange-800",
+  optimize: "bg-teal-500/10 text-teal-700 border-teal-200 dark:text-teal-300 dark:border-teal-800"
 };
 
 const categoryLabels = {
@@ -28,7 +29,8 @@ const categoryLabels = {
   edit: "Edit", 
   organize: "Organize",
   security: "Security",
-  ai: "AI Powered"
+  ai: "AI Powered",
+  optimize: "Optimize"
 };
 
 const categoryDescriptions = {
@@ -36,7 +38,8 @@ const categoryDescriptions = {
   edit: "Modify and enhance PDF content", 
   organize: "Manage and structure PDF files",
   security: "Protect and secure PDF documents",
-  ai: "AI-powered advanced PDF features"
+  ai: "AI-powered advanced PDF features",
+  optimize: "Reduce file size and improve performance"
 };
 
 export const ToolCard = ({ 
@@ -76,7 +79,7 @@ export const ToolCard = ({
                   </Badge>
                 )}
                 {isPremium && (
-                  <Badge variant="secondary" className="bg-ai/10 text-ai text-xs">
+                  <Badge variant="secondary" className="bg-orange-500/10 text-orange-700 text-xs">
                     AI
                   </Badge>
                 )}
