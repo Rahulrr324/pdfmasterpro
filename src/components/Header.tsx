@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, X } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -8,15 +9,33 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export const Header = () => {
   const { setTheme, theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
   const navigation = [
-    { name: "All Tools", href: "#tools" },
-    { name: "Convert", href: "#convert" },
-    { name: "Edit", href: "#edit" },
-    { name: "Organize", href: "#organize" },
-    { name: "Security", href: "#security" },
-    { name: "AI Tools", href: "#ai" },
+    { name: "All Tools", href: "#tools", section: "tools" },
+    { name: "Convert", href: "#convert", section: "convert" },
+    { name: "Edit", href: "#edit", section: "edit" },
+    { name: "Organize", href: "#organize", section: "organize" },
+    { name: "Security", href: "#security", section: "security" },
+    { name: "AI Tools", href: "#ai", section: "ai" },
   ];
+
+  const isActiveSection = (section: string) => {
+    const hash = location.hash.replace('#', '');
+    return hash === section;
+  };
+
+  const handleNavClick = (href: string, section: string) => {
+    setIsOpen(false);
+    if (location.pathname !== '/') {
+      window.location.href = `/${href}`;
+    } else {
+      const element = document.getElementById(section);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -24,8 +43,12 @@ export const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg">
-              <span className="text-lg font-bold">PM</span>
+            <div 
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
+              role="img"
+              aria-label="PdfMaster Pro Logo"
+            >
+              <span className="text-lg font-bold" aria-hidden="true">PM</span>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold text-foreground bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
@@ -36,15 +59,21 @@ export const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Main navigation">
             {navigation.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:text-orange-500"
+                onClick={() => handleNavClick(item.href, item.section)}
+                className={`text-sm font-medium transition-colors hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded px-2 py-1 ${
+                  isActiveSection(item.section) 
+                    ? 'text-orange-600 font-semibold' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-current={isActiveSection(item.section) ? "page" : undefined}
+                aria-label={`Navigate to ${item.name} section`}
               >
                 {item.name}
-              </a>
+              </button>
             ))}
           </nav>
 
@@ -55,6 +84,7 @@ export const Header = () => {
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="hidden sm:flex"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
             >
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -63,8 +93,13 @@ export const Header = () => {
             {/* Mobile Menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="md:hidden"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
@@ -74,21 +109,26 @@ export const Header = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
                   >
                     <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                     <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                   </Button>
                 </div>
-                <nav className="flex flex-col space-y-4">
+                <nav className="flex flex-col space-y-4" role="navigation" aria-label="Mobile navigation">
                   {navigation.map((item) => (
-                    <a
+                    <button
                       key={item.name}
-                      href={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => handleNavClick(item.href, item.section)}
+                      className={`text-sm font-medium transition-colors text-left px-2 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                        isActiveSection(item.section)
+                          ? 'text-orange-600 font-semibold bg-orange-50 dark:bg-orange-900/20'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                      aria-current={isActiveSection(item.section) ? "page" : undefined}
                     >
                       {item.name}
-                    </a>
+                    </button>
                   ))}
                 </nav>
               </SheetContent>
