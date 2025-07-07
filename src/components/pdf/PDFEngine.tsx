@@ -1,4 +1,3 @@
-
 import { PDFDocument, degrees, StandardFonts, rgb, PageSizes, PDFPage } from 'pdf-lib';
 
 export class PDFEngine {
@@ -70,8 +69,7 @@ export class PDFEngine {
     
     return await pdf.save({ 
       useObjectStreams,
-      addDefaultPage: false,
-      objectsMapSize: compressionLevel === 'low' ? 50 : 100
+      addDefaultPage: false
     });
   }
 

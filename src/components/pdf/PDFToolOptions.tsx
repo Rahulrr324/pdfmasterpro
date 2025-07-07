@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,9 +11,10 @@ interface PDFToolOptionsProps {
   options: Record<string, any>;
   onOptionsChange: (options: Record<string, any>) => void;
   toolId?: string;
+  pdfInfo?: any;
 }
 
-export const PDFToolOptions = ({ tool, options, onOptionsChange, toolId }: PDFToolOptionsProps) => {
+export const PDFToolOptions = ({ tool, options, onOptionsChange, toolId, pdfInfo }: PDFToolOptionsProps) => {
   const updateOption = (key: string, value: any) => {
     onOptionsChange({ ...options, [key]: value });
   };
