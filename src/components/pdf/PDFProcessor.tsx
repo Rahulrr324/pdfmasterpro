@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { saveAs } from "file-saver";
-import { Download, FileText, Merge, Scissors, Lock, RotateCcw, Archive, Eye, AlertTriangle, Unlock } from "lucide-react";
+import { Download, FileText, Merge, Scissors, Lock, RotateCcw, Archive, Eye, AlertTriangle, Unlock, Shield, Crop, Edit3, Layers, Image, Type } from "lucide-react";
 import { FileUploader } from "./FileUploader";
 import { ProgressTracker } from "./ProgressTracker";
 import { PDFToolOptions } from "./PDFToolOptions";
@@ -26,13 +27,26 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
   const [error, setError] = useState<string>("");
   const [options, setOptions] = useState<Record<string, any>>({});
   const [compressionStats, setCompressionStats] = useState<{before: number, after: number} | null>(null);
+  const [pdfInfo, setPdfInfo] = useState<any>(null);
   const { toast } = useToast();
+
+  // Get PDF info for preview when files are uploaded
+  useEffect(() => {
+    if (files.length === 1 && files[0].type.includes('pdf')) {
+      PDFEngine.getPDFInfo(files[0])
+        .then(info => setPdfInfo(info))
+        .catch(() => setPdfInfo(null));
+    } else {
+      setPdfInfo(null);
+    }
+  }, [files]);
 
   const validateFiles = useCallback(() => {
     if (files.length === 0) {
       throw new Error("Please select files to process");
     }
 
+    // Tool-specific file count validation
     if (tool === "merge" && files.length < 2) {
       throw new Error("Please select at least 2 files to merge");
     }
@@ -41,7 +55,7 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       throw new Error("This tool only accepts one file at a time");
     }
 
-    // Validate file types based on tool
+    // Validate file types and sizes
     for (const file of files) {
       if (tool === "image-to-pdf" && !file.type.includes('image')) {
         throw new Error(`${file.name} is not a valid image file`);
@@ -52,9 +66,13 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       if (file.size > 50 * 1024 * 1024) {
         throw new Error(`${file.name} is too large. Maximum size is 50MB`);
       }
+
+      if (file.size === 0) {
+        throw new Error(`${file.name} is empty`);
+      }
     }
 
-    // Tool-specific validations
+    // Tool-specific option validation
     if (tool === "protect" && !options.password) {
       throw new Error("Please enter a password to protect the PDF");
     }
@@ -67,8 +85,13 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       if (!options.startPage || !options.endPage) {
         throw new Error("Please specify start and end page numbers");
       }
-      if (parseInt(options.startPage) > parseInt(options.endPage)) {
+      const start = parseInt(options.startPage);
+      const end = parseInt(options.endPage);
+      if (start > end) {
         throw new Error("Start page must be less than or equal to end page");
+      }
+      if (pdfInfo && (start > pdfInfo.pageCount || end > pdfInfo.pageCount)) {
+        throw new Error(`Page numbers must be between 1 and ${pdfInfo.pageCount}`);
       }
     }
 
@@ -79,10 +102,14 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       }
     }
 
-    if (tool === "watermark" && !options.text && options.type !== "timestamp") {
+    if (tool === "watermark" && !options.text && options.type !== "timestamp" && options.type !== "confidential") {
       throw new Error("Please enter watermark text");
     }
-  }, [files, tool, options]);
+
+    if (tool === "rotate" && !options.rotation) {
+      throw new Error("Please select rotation angle");
+    }
+  }, [files, tool, options, pdfInfo]);
 
   const processFiles = async () => {
     setError("");
@@ -102,7 +129,7 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       setCurrentStep("Loading files...");
       setProgress(15);
 
-      let result: Uint8Array | Uint8Array[];
+      let result: Uint8Array | Uint8Array[] | string;
       let filename: string;
       let isMultipleFiles = false;
       const originalSize = files.reduce((total, file) => total + file.size, 0);
@@ -177,14 +204,20 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
           break;
 
         case "view":
-          // For view mode, we don't process, just display
+          // For view mode, we don't process, just display info
           setProgress(100);
           setCurrentStep("PDF loaded for viewing");
           toast({
-            title: "PDF Loaded",
-            description: "Your PDF is now ready for viewing",
+            title: "PDF Loaded Successfully",
+            description: `${pdfInfo?.pageCount || 'Unknown'} pages • ${(files[0].size / 1024 / 1024).toFixed(2)} MB`,
           });
           return;
+
+        case "image-to-pdf":
+          result = await PDFEngine.convertImagesToPDF(files);
+          filename = `images-to-pdf-${Date.now()}.pdf`;
+          setProgress(70);
+          break;
 
         case "convert":
           result = await PDFEngine.convertPDF(files[0], { ...options, toolId });
@@ -215,9 +248,13 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
         const blob = new Blob([result], { type: mimeType });
         saveAs(blob, filename);
         
+        const compressionText = compressionStats 
+          ? ` (${Math.round((1 - compressionStats.after / compressionStats.before) * 100)}% smaller)` 
+          : '';
+        
         toast({
           title: "Success!",
-          description: `Your file has been processed and downloaded${compressionStats ? ` (${Math.round((1 - compressionStats.after / compressionStats.before) * 100)}% smaller)` : ''}`,
+          description: `Your file has been processed and downloaded${compressionText}`,
         });
       }
 
@@ -275,13 +312,19 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       case "compress": return Archive;
       case "rotate": return RotateCcw;
       case "watermark": return Eye;
+      case "crop": return Crop;
+      case "edit": return Edit3;
+      case "extract": return Layers;
+      case "image-to-pdf": return Image;
+      case "convert": return Type;
+      case "view": return Eye;
       default: return FileText;
     }
   };
 
   const Icon = getIcon();
   const allowMultiple = tool === "merge" || tool === "image-to-pdf";
-  const acceptedTypes = toolId?.includes("image-to-pdf") ? "image/*" : ".pdf";
+  const acceptedTypes = tool === "image-to-pdf" ? "image/*" : ".pdf";
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg">
@@ -306,11 +349,42 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
           maxSizeInMB={50}
         />
 
+        {/* Show PDF info for single PDF files */}
+        {pdfInfo && (
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-blue-600">{pdfInfo.pageCount}</p>
+                <p className="text-xs text-blue-600 font-medium">Pages</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-blue-600">
+                  {(pdfInfo.fileSize / 1024 / 1024).toFixed(1)}MB
+                </p>
+                <p className="text-xs text-blue-600 font-medium">File Size</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-blue-600">
+                  {pdfInfo.pages[0]?.width.toFixed(0) || 'N/A'}
+                </p>
+                <p className="text-xs text-blue-600 font-medium">Width (pt)</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-blue-600">
+                  {pdfInfo.pages[0]?.height.toFixed(0) || 'N/A'}
+                </p>
+                <p className="text-xs text-blue-600 font-medium">Height (pt)</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <PDFToolOptions
           tool={tool}
           options={options}
           onOptionsChange={setOptions}
           toolId={toolId}
+          pdfInfo={pdfInfo}
         />
 
         <ProgressTracker
@@ -354,7 +428,7 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
         <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Lock className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <Shield className="w-4 h-4 text-green-600 dark:text-green-400" />
             </div>
             <div className="space-y-1">
               <p className="font-medium text-green-800 dark:text-green-200 text-sm">
