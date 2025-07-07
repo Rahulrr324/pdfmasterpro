@@ -35,7 +35,11 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
     if (files.length === 1 && files[0].type.includes('pdf')) {
       PDFEngine.getPDFInfo(files[0])
         .then(info => setPdfInfo(info))
-        .catch(() => setPdfInfo(null));
+        .catch((error) => {
+          console.error('Failed to get PDF info:', error);
+          setPdfInfo(null);
+          // Don't show error toast here as it's just for preview
+        });
     } else {
       setPdfInfo(null);
     }
@@ -58,7 +62,7 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
     // Validate file types and sizes
     for (const file of files) {
       if (tool === "image-to-pdf" && !file.type.includes('image')) {
-        throw new Error(`${file.name} is not a valid image file`);
+        throw new Error(`${file.name} is not a valid image file. Please upload JPG or PNG images.`);
       } else if (tool !== "image-to-pdf" && !file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
         throw new Error(`${file.name} is not a valid PDF file`);
       }
@@ -102,8 +106,10 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       }
     }
 
-    if (tool === "watermark" && !options.text && options.type !== "timestamp" && options.type !== "confidential") {
-      throw new Error("Please enter watermark text");
+    if (tool === "watermark") {
+      if (!options.text && options.type !== "timestamp" && options.type !== "confidential") {
+        throw new Error("Please enter watermark text");
+      }
     }
 
     if (tool === "rotate" && !options.rotation) {
@@ -425,21 +431,44 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
           )}
         </div>
 
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Shield className="w-4 h-4 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium text-green-800 dark:text-green-200 text-sm">
-                🔒 Your Privacy is Protected
-              </p>
-              <p className="text-green-700 dark:text-green-300 text-xs leading-relaxed">
-                All PDF processing happens locally in your browser. Your files are never uploaded to our servers 
-                and are automatically cleared from memory after processing.
-              </p>
+        {/* Enhanced privacy notice with limitations disclaimer */}
+        <div className="space-y-3">
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Shield className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium text-green-800 dark:text-green-200 text-sm">
+                  🔒 Your Privacy is Protected
+                </p>
+                <p className="text-green-700 dark:text-green-300 text-xs leading-relaxed">
+                  All PDF processing happens locally in your browser. Your files are never uploaded to our servers 
+                  and are automatically cleared from memory after processing.
+                </p>
+              </div>
             </div>
           </div>
+
+          {/* Limitations notice for certain tools */}
+          {(toolId === 'pdf-to-word' || toolId === 'pdf-to-excel' || tool === 'protect' || tool === 'unlock') && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium text-amber-800 dark:text-amber-200 text-sm">
+                    ⚠️ Browser Limitations
+                  </p>
+                  <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed">
+                    Some advanced features like format conversion and encryption require server-side processing 
+                    for optimal results. This browser-based tool provides basic functionality.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
