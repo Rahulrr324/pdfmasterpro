@@ -11,7 +11,24 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
-        <ToolsGrid />
+        <section id="tools">
+          <ToolsGrid />
+        </section>
+        <section id="convert">
+          <ToolsGrid filter="convert" />
+        </section>
+        <section id="edit">
+          <ToolsGrid filter="edit" />
+        </section>
+        <section id="organize">
+          <ToolsGrid filter="organize" />
+        </section>
+        <section id="security">
+          <ToolsGrid filter="security" />
+        </section>
+        <section id="ai">
+          <ToolsGrid filter="ai" />
+        </section>
         <Features />
       </main>
       <Footer />

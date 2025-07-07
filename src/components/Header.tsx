@@ -1,15 +1,16 @@
 
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, X } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const Header = () => {
   const { setTheme, theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navigation = [
     { name: "All Tools", href: "#tools", section: "tools" },
@@ -28,7 +29,7 @@ export const Header = () => {
   const handleNavClick = (href: string, section: string) => {
     setIsOpen(false);
     if (location.pathname !== '/') {
-      window.location.href = `/${href}`;
+      navigate(`/${href}`);
     } else {
       const element = document.getElementById(section);
       if (element) {
@@ -37,12 +38,19 @@ export const Header = () => {
     }
   };
 
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <div 
+            className="flex items-center space-x-3 cursor-pointer"
+            onClick={handleLogoClick}
+          >
             <div 
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
               role="img"
