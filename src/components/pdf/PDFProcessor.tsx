@@ -30,22 +30,33 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
   const [pdfInfo, setPdfInfo] = useState<any>(null);
   const { toast } = useToast();
 
+  // File size limit for InfinityFree hosting (10MB)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+
   // Get PDF info for preview when files are uploaded
   useEffect(() => {
-    if (files.length === 1 && files[0].type.includes('pdf')) {
-      PDFEngine.getPDFInfo(files[0])
-        .then(info => setPdfInfo(info))
-        .catch((error) => {
+    const loadPdfInfo = async () => {
+      if (files.length === 1 && files[0].type.includes('pdf')) {
+        try {
+          const info = await PDFEngine.getPDFInfo(files[0]);
+          setPdfInfo(info);
+          console.log('PDF Info loaded:', info);
+        } catch (error) {
           console.error('Failed to get PDF info:', error);
           setPdfInfo(null);
           // Don't show error toast here as it's just for preview
-        });
-    } else {
-      setPdfInfo(null);
-    }
+        }
+      } else {
+        setPdfInfo(null);
+      }
+    };
+    
+    loadPdfInfo();
   }, [files]);
 
   const validateFiles = useCallback(() => {
+    console.log('Validating files:', files.length);
+    
     if (files.length === 0) {
       throw new Error("Please select files to process");
     }
@@ -59,20 +70,31 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       throw new Error("This tool only accepts one file at a time");
     }
 
-    // Validate file types and sizes
+    // Validate file types, sizes, and InfinityFree limits
     for (const file of files) {
-      if (tool === "image-to-pdf" && !file.type.includes('image')) {
-        throw new Error(`${file.name} is not a valid image file. Please upload JPG or PNG images.`);
-      } else if (tool !== "image-to-pdf" && !file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
-        throw new Error(`${file.name} is not a valid PDF file`);
-      }
+      console.log(`Validating ${file.name}: ${file.size} bytes, type: ${file.type}`);
       
-      if (file.size > 50 * 1024 * 1024) {
-        throw new Error(`${file.name} is too large. Maximum size is 50MB`);
+      // Check file size (InfinityFree 10MB limit)
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`${file.name} is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum allowed size is 10MB for free hosting compatibility.`);
       }
 
       if (file.size === 0) {
-        throw new Error(`${file.name} is empty`);
+        throw new Error(`${file.name} is empty or corrupted`);
+      }
+
+      // File type validation
+      if (tool === "image-to-pdf") {
+        if (!file.type.includes('image')) {
+          throw new Error(`${file.name} is not a valid image file. Please upload JPG or PNG images.`);
+        }
+        if (!file.type.includes('jpeg') && !file.type.includes('jpg') && !file.type.includes('png')) {
+          throw new Error(`${file.name} format is not supported. Please upload JPG or PNG images only.`);
+        }
+      } else if (tool !== "image-to-pdf") {
+        if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+          throw new Error(`${file.name} is not a valid PDF file. Please upload PDF files only.`);
+        }
       }
     }
 
@@ -87,10 +109,13 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
 
     if (tool === "split" && options.mode === "range") {
       if (!options.startPage || !options.endPage) {
-        throw new Error("Please specify start and end page numbers");
+        throw new Error("Please specify both start and end page numbers for range splitting");
       }
       const start = parseInt(options.startPage);
       const end = parseInt(options.endPage);
+      if (isNaN(start) || isNaN(end) || start < 1 || end < 1) {
+        throw new Error("Please enter valid page numbers (starting from 1)");
+      }
       if (start > end) {
         throw new Error("Start page must be less than or equal to end page");
       }
@@ -99,23 +124,40 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       }
     }
 
-    if (tool === "extract" && options.pageNumbers && typeof options.pageNumbers === 'string') {
+    if (tool === "split" && options.mode === "intervals") {
+      const interval = parseInt(options.interval);
+      if (isNaN(interval) || interval < 1) {
+        throw new Error("Please enter a valid interval (minimum 1 page per file)");
+      }
+    }
+
+    if (tool === "extract") {
+      if (!options.pageNumbers || typeof options.pageNumbers !== 'string') {
+        throw new Error("Please specify page numbers to extract (e.g., 1,3,5-8)");
+      }
       const pageStr = options.pageNumbers.trim();
       if (!pageStr) {
-        throw new Error("Please specify page numbers to extract");
+        throw new Error("Please enter page numbers in format: 1,3,5-8");
       }
     }
 
     if (tool === "watermark") {
-      if (!options.text && options.type !== "timestamp" && options.type !== "confidential") {
+      if (options.type === "text" && !options.text) {
         throw new Error("Please enter watermark text");
+      }
+      if (options.opacity && (options.opacity < 0.1 || options.opacity > 1)) {
+        throw new Error("Watermark opacity must be between 10% and 100%");
       }
     }
 
-    if (tool === "rotate" && !options.rotation) {
-      throw new Error("Please select rotation angle");
+    if (tool === "rotate") {
+      if (!options.angle && options.angle !== 0) {
+        throw new Error("Please select a rotation angle");
+      }
     }
-  }, [files, tool, options, pdfInfo]);
+
+    console.log('File validation passed');
+  }, [files, tool, options, pdfInfo, MAX_FILE_SIZE]);
 
   const processFiles = async () => {
     setError("");
@@ -127,12 +169,13 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       validateFiles();
       
       setIsProcessing(true);
-      setCurrentStep("Initializing...");
+      setCurrentStep("Initializing processing...");
       setProgress(5);
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Short delay for UI feedback
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      setCurrentStep("Loading files...");
+      setCurrentStep("Loading and validating files...");
       setProgress(15);
 
       let result: Uint8Array | Uint8Array[] | string;
@@ -140,24 +183,32 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       let isMultipleFiles = false;
       const originalSize = files.reduce((total, file) => total + file.size, 0);
 
-      setCurrentStep("Processing...");
+      setCurrentStep(`Processing with ${tool} tool...`);
       setProgress(30);
+
+      console.log(`Starting ${tool} operation on ${files.length} file(s)`);
+
+      // Add processing delay for user feedback
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       switch (tool) {
         case "merge":
+          setCurrentStep("Merging PDF files...");
           result = await PDFEngine.mergePDFs(files);
           filename = `merged-${Date.now()}.pdf`;
           setProgress(70);
           break;
           
         case "split":
+          setCurrentStep("Splitting PDF file...");
           result = await PDFEngine.splitPDF(files[0], options);
-          filename = "split";
+          filename = `split-${files[0].name.replace('.pdf', '')}`;
           isMultipleFiles = true;
           setProgress(70);
           break;
           
         case "compress":
+          setCurrentStep("Compressing PDF file...");
           result = await PDFEngine.compressPDF(files[0], options);
           filename = `compressed-${files[0].name}`;
           setCompressionStats({
@@ -168,71 +219,83 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
           break;
           
         case "protect":
+          setCurrentStep("Adding password protection...");
           result = await PDFEngine.protectPDF(files[0], options);
           filename = `protected-${files[0].name}`;
           setProgress(70);
           break;
 
         case "unlock":
+          setCurrentStep("Removing password protection...");
           result = await PDFEngine.unlockPDF(files[0], options);
           filename = `unlocked-${files[0].name}`;
           setProgress(70);
           break;
 
         case "rotate":
+          setCurrentStep("Rotating PDF pages...");
           result = await PDFEngine.rotatePDF(files[0], options);
           filename = `rotated-${files[0].name}`;
           setProgress(70);
           break;
 
         case "watermark":
+          setCurrentStep("Adding watermark...");
           result = await PDFEngine.addWatermark(files[0], options);
           filename = `watermarked-${files[0].name}`;
           setProgress(70);
           break;
 
         case "extract":
+          setCurrentStep("Extracting pages...");
           result = await PDFEngine.extractPages(files[0], options);
-          filename = `extracted-${files[0].name}`;
+          filename = `extracted-pages-${files[0].name}`;
           setProgress(70);
           break;
 
         case "crop":
+          setCurrentStep("Cropping PDF pages...");
           result = await PDFEngine.cropPDF(files[0], options);
           filename = `cropped-${files[0].name}`;
           setProgress(70);
           break;
 
         case "edit":
+          setCurrentStep("Editing PDF content...");
           result = await PDFEngine.editPDF(files[0], options);
           filename = `edited-${files[0].name}`;
           setProgress(70);
           break;
 
         case "view":
-          // For view mode, we don't process, just display info
+          // For view mode, we just display the PDF info
           setProgress(100);
-          setCurrentStep("PDF loaded for viewing");
+          setCurrentStep("PDF loaded successfully");
+          
           toast({
             title: "PDF Loaded Successfully",
             description: `${pdfInfo?.pageCount || 'Unknown'} pages • ${(files[0].size / 1024 / 1024).toFixed(2)} MB`,
           });
+          
+          console.log('PDF viewing mode - no file processing needed');
           return;
 
         case "image-to-pdf":
+          setCurrentStep("Converting images to PDF...");
           result = await PDFEngine.convertImagesToPDF(files);
-          filename = `images-to-pdf-${Date.now()}.pdf`;
+          filename = `images-converted-${Date.now()}.pdf`;
           setProgress(70);
           break;
 
         case "convert":
+          setCurrentStep("Converting PDF...");
           result = await PDFEngine.convertPDF(files[0], { ...options, toolId });
           filename = getConvertedFilename(files[0].name, toolId);
           setProgress(70);
           break;
           
         default:
-          throw new Error("Tool not implemented");
+          throw new Error(`Tool "${tool}" is not implemented yet`);
       }
 
       setCurrentStep("Preparing download...");
@@ -240,43 +303,57 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
 
       // Handle file download
       if (Array.isArray(result)) {
+        // Multiple files (e.g., split operation)
+        console.log(`Downloading ${result.length} files`);
+        
         result.forEach((pdfBytes, index) => {
           const blob = new Blob([pdfBytes], { type: "application/pdf" });
-          saveAs(blob, `${filename}-${index + 1}.pdf`);
+          saveAs(blob, `${filename}-page-${index + 1}.pdf`);
         });
         
         toast({
-          title: "Success!",
-          description: `${result.length} files have been processed and downloaded`,
+          title: "Processing Complete!",
+          description: `${result.length} files have been processed and downloaded successfully.`,
         });
       } else {
+        // Single file
+        console.log('Downloading single file:', filename);
+        
         const mimeType = getMimeType(toolId);
         const blob = new Blob([result], { type: mimeType });
         saveAs(blob, filename);
         
-        const compressionText = compressionStats 
-          ? ` (${Math.round((1 - compressionStats.after / compressionStats.before) * 100)}% smaller)` 
-          : '';
+        let successMessage = "Your file has been processed and downloaded successfully";
+        
+        if (compressionStats) {
+          const compressionPercent = Math.round((1 - compressionStats.after / compressionStats.before) * 100);
+          successMessage += ` (${compressionPercent > 0 ? compressionPercent + '% smaller' : 'size optimized'})`;
+        }
         
         toast({
-          title: "Success!",
-          description: `Your file has been processed and downloaded${compressionText}`,
+          title: "Processing Complete!",
+          description: successMessage,
         });
       }
 
       setProgress(100);
-      setCurrentStep("Complete!");
+      setCurrentStep("Download complete!");
+
+      console.log(`${tool} operation completed successfully`);
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred during processing";
+      console.error('Processing error:', error);
+      
       setError(errorMessage);
       
       toast({
-        title: "Processing failed",
+        title: "Processing Failed",
         description: errorMessage,
         variant: "destructive"
       });
     } finally {
+      // Reset UI state after delay
       setTimeout(() => {
         setIsProcessing(false);
         setProgress(0);
@@ -294,6 +371,10 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
       case "pdf-to-jpg": return `${baseName}.jpg`;
       case "pdf-to-png": return `${baseName}.png`;
       case "pdf-to-text": return `${baseName}.txt`;
+      case "word-to-pdf":
+      case "excel-to-pdf":
+      case "html-to-pdf":
+        return `${baseName}-converted.pdf`;
       default: return `converted-${originalName}`;
     }
   };
@@ -352,36 +433,42 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
           onFilesChange={setFiles}
           allowMultiple={allowMultiple}
           acceptedTypes={acceptedTypes}
-          maxSizeInMB={50}
+          maxSizeInMB={10} // Updated for InfinityFree compatibility
         />
 
-        {/* Show PDF info for single PDF files */}
+        {/* Enhanced PDF info display */}
         {pdfInfo && (
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-blue-600">{pdfInfo.pageCount}</p>
-                <p className="text-xs text-blue-600 font-medium">Pages</p>
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4">PDF Information</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{pdfInfo.pageCount}</p>
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Pages</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-blue-600">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {(pdfInfo.fileSize / 1024 / 1024).toFixed(1)}MB
                 </p>
-                <p className="text-xs text-blue-600 font-medium">File Size</p>
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">File Size</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-blue-600">
-                  {pdfInfo.pages[0]?.width.toFixed(0) || 'N/A'}
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {pdfInfo.pages[0]?.width || 'N/A'}
                 </p>
-                <p className="text-xs text-blue-600 font-medium">Width (pt)</p>
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Width (pt)</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-blue-600">
-                  {pdfInfo.pages[0]?.height.toFixed(0) || 'N/A'}
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {pdfInfo.pages[0]?.height || 'N/A'}
                 </p>
-                <p className="text-xs text-blue-600 font-medium">Height (pt)</p>
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Height (pt)</p>
               </div>
             </div>
+            {pdfInfo.title !== files[0]?.name && (
+              <div className="mt-4 text-sm text-blue-600 dark:text-blue-400">
+                <strong>Title:</strong> {pdfInfo.title}
+              </div>
+            )}
           </div>
         )}
 
@@ -431,7 +518,7 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
           )}
         </div>
 
-        {/* Enhanced privacy notice with limitations disclaimer */}
+        {/* Enhanced hosting compatibility notice */}
         <div className="space-y-3">
           <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
             <div className="flex items-start gap-3">
@@ -440,30 +527,48 @@ export const PDFProcessor = ({ tool, title, description, toolId }: PDFProcessorP
               </div>
               <div className="space-y-1">
                 <p className="font-medium text-green-800 dark:text-green-200 text-sm">
-                  🔒 Your Privacy is Protected
+                  🔒 Complete Privacy Protection
                 </p>
                 <p className="text-green-700 dark:text-green-300 text-xs leading-relaxed">
-                  All PDF processing happens locally in your browser. Your files are never uploaded to our servers 
-                  and are automatically cleared from memory after processing.
+                  All PDF processing happens entirely in your browser using the PDF-lib library. 
+                  Your files never leave your device and are automatically cleared from memory after processing.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Limitations notice for certain tools */}
+          {/* File size limit notice for InfinityFree */}
+          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium text-yellow-800 dark:text-yellow-200 text-sm">
+                  📁 File Size Limit: 10MB per file
+                </p>
+                <p className="text-yellow-700 dark:text-yellow-300 text-xs leading-relaxed">
+                  For optimal performance and compatibility with free hosting services, 
+                  please keep individual files under 10MB. Larger files may fail to process.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Browser limitations notice for certain tools */}
           {(toolId === 'pdf-to-word' || toolId === 'pdf-to-excel' || tool === 'protect' || tool === 'unlock') && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-amber-800 dark:text-amber-200 text-sm">
-                    ⚠️ Browser Limitations
+                  <p className="font-medium text-orange-800 dark:text-orange-200 text-sm">
+                    ⚠️ Browser Processing Limitations
                   </p>
-                  <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed">
-                    Some advanced features like format conversion and encryption require server-side processing 
-                    for optimal results. This browser-based tool provides basic functionality.
+                  <p className="text-orange-700 dark:text-orange-300 text-xs leading-relaxed">
+                    Advanced features like format conversion and encryption have limitations when processed in browsers. 
+                    For professional-grade results, consider using desktop PDF software.
                   </p>
                 </div>
               </div>
