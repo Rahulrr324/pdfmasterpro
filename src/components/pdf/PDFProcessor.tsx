@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
+
+import React, { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { FileUploader } from './FileUploader';
 import { ProgressTracker } from './ProgressTracker';
@@ -6,7 +7,7 @@ import { PDFEngine } from './PDFEngine';
 import { Button } from '@/components/ui/button';
 import { Download, ArrowLeft } from 'lucide-react';
 
-type ProcessingTool = 
+export type ProcessingTool = 
   | "view" 
   | "rotate" 
   | "split" 
@@ -21,9 +22,10 @@ type ProcessingTool =
   | "watermark"
   | "image-to-pdf";
 
-interface PDFProcessorProps {
+export interface PDFProcessorProps {
   tool: ProcessingTool;
   onBack?: () => void;
+  toolId?: string;
 }
 
 interface ProcessingStep {
@@ -33,12 +35,12 @@ interface ProcessingStep {
   progress: number;
 }
 
-export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack }) => {
+export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [processing, setProcessing] = useState(false);
   const [steps, setSteps] = useState<ProcessingStep[]>([]);
   const [results, setResults] = useState<{ name: string; url: string }[]>([]);
-  const pdfEngineRef = useRef<PDFEngine>();
+  const [options, setOptions] = useState<Record<string, any>>({});
 
   const processFiles = useCallback(async () => {
     if (files.length === 0) {
@@ -50,11 +52,6 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack }) => {
     setResults([]);
 
     try {
-      if (!pdfEngineRef.current) {
-        pdfEngineRef.current = new PDFEngine();
-      }
-
-      const engine = pdfEngineRef.current;
       let processedResults: { name: string; url: string }[] = [];
 
       // Initialize processing steps based on tool type
@@ -71,20 +68,27 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack }) => {
 
         updateStep('converting', 'processing', 0);
         
-        for (let i = 0; i < imageFiles.length; i++) {
-          const file = imageFiles[i];
-          const progress = ((i + 1) / imageFiles.length) * 100;
-          
-          updateStep('converting', 'processing', progress);
-          
-          const result = await engine.imageToPdf(file);
-          processedResults.push({
-            name: `${file.name.split('.')[0]}.pdf`,
-            url: result
-          });
-        }
+        const result = await PDFEngine.convertImagesToPDF(imageFiles);
+        const blob = new Blob([result], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        processedResults.push({
+          name: 'converted_images.pdf',
+          url: url
+        });
 
         updateStep('converting', 'completed', 100);
+      } else if (tool === "merge") {
+        updateStep('processing', 'processing', 50);
+        const result = await PDFEngine.mergePDFs(files);
+        const blob = new Blob([result], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        processedResults.push({
+          name: 'merged_document.pdf',
+          url: url
+        });
+        updateStep('processing', 'completed', 100);
       } else {
         // Handle other PDF operations
         for (let i = 0; i < files.length; i++) {
@@ -93,48 +97,67 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack }) => {
 
           updateStep('processing', 'processing', progress);
 
-          let result: string;
+          let result: Uint8Array;
           switch (tool) {
-            case "merge":
-              result = await engine.merge(files);
-              break;
             case "split":
-              result = await engine.split(file);
-              break;
+              const splitResults = await PDFEngine.splitPDF(file, options);
+              for (let j = 0; j < splitResults.length; j++) {
+                const blob = new Blob([splitResults[j]], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                processedResults.push({
+                  name: `${file.name.split('.')[0]}_part_${j + 1}.pdf`,
+                  url: url
+                });
+              }
+              continue;
             case "compress":
-              result = await engine.compress(file);
+              result = await PDFEngine.compressPDF(file, options);
               break;
             case "rotate":
-              result = await engine.rotate(file, 90);
-              break;
-            case "convert":
-              result = await engine.convertToImage(file);
+              result = await PDFEngine.rotatePDF(file, options);
               break;
             case "protect":
-              result = await engine.protect(file, 'password123');
+              result = await PDFEngine.protectPDF(file, options);
               break;
             case "unlock":
-              result = await engine.unlock(file, 'password123');
+              result = await PDFEngine.unlockPDF(file, options);
               break;
             case "watermark":
-              result = await engine.addWatermark(file, 'CONFIDENTIAL');
+              result = await PDFEngine.addWatermark(file, options);
               break;
             case "extract":
-              result = await engine.extractPages(file, [1, 2]);
+              result = await PDFEngine.extractPages(file, options);
               break;
             case "crop":
-              result = await engine.crop(file, { x: 0, y: 0, width: 500, height: 700 });
+              result = await PDFEngine.cropPDF(file, options);
               break;
             case "edit":
-              result = await engine.editText(file, 'New text content');
+              result = await PDFEngine.editPDF(file, options);
+              break;
+            case "convert":
+              const convertResult = await PDFEngine.convertPDF(file, { ...options, toolId });
+              if (typeof convertResult === 'string') {
+                // Text extraction result
+                const blob = new Blob([convertResult], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                processedResults.push({
+                  name: `${file.name.split('.')[0]}.txt`,
+                  url: url
+                });
+                continue;
+              } else {
+                result = convertResult;
+              }
               break;
             default:
               throw new Error(`Tool ${tool} not implemented`);
           }
 
+          const blob = new Blob([result], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
           processedResults.push({
             name: `processed_${file.name}`,
-            url: result
+            url: url
           });
         }
 
@@ -160,7 +183,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack }) => {
     } finally {
       setProcessing(false);
     }
-  }, [files, tool]);
+  }, [files, tool, options, toolId]);
 
   const getProcessingSteps = (tool: ProcessingTool, fileCount: number): ProcessingStep[] => {
     const baseSteps = [
@@ -232,14 +255,16 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack }) => {
         files={files}
         onFilesChange={setFiles}
         acceptedTypes={tool === "image-to-pdf" ? "image/*" : ".pdf"}
-        maxFiles={tool === "merge" ? 10 : 1}
         disabled={processing}
       />
 
       {/* Processing */}
       {(processing || results.length > 0) && (
         <div className="space-y-6">
-          <ProgressTracker steps={steps} />
+          <ProgressTracker 
+            steps={steps} 
+            isProcessing={processing}
+          />
           
           {/* Process Button */}
           {files.length > 0 && !processing && results.length === 0 && (

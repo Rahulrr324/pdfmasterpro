@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -150,8 +149,6 @@ export default function ToolPage() {
           
           <PDFProcessor
             tool={config.tool}
-            title={config.title}
-            description={config.description}
             toolId={toolId}
           />
         </div>
