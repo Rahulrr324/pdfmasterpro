@@ -38,7 +38,9 @@ interface ProcessingStep {
 export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [processing, setProcessing] = useState(false);
-  const [steps, setSteps] = useState<ProcessingStep[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const [results, setResults] = useState<{ name: string; url: string }[]>([]);
   const [options, setOptions] = useState<Record<string, any>>({});
 
@@ -49,14 +51,13 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
     }
 
     setProcessing(true);
+    setProgress(0);
+    setError('');
     setResults([]);
+    setCurrentStep('Initializing...');
 
     try {
       let processedResults: { name: string; url: string }[] = [];
-
-      // Initialize processing steps based on tool type
-      const processingSteps = getProcessingSteps(tool, files.length);
-      setSteps(processingSteps);
 
       // Process files based on tool type
       if (tool === "image-to-pdf") {
@@ -66,7 +67,8 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
           throw new Error('Please select image files for conversion');
         }
 
-        updateStep('converting', 'processing', 0);
+        setCurrentStep('Converting images to PDF...');
+        setProgress(25);
         
         const result = await PDFEngine.convertImagesToPDF(imageFiles);
         const blob = new Blob([result], { type: 'application/pdf' });
@@ -77,9 +79,10 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
           url: url
         });
 
-        updateStep('converting', 'completed', 100);
+        setProgress(100);
       } else if (tool === "merge") {
-        updateStep('processing', 'processing', 50);
+        setCurrentStep('Merging PDF files...');
+        setProgress(50);
         const result = await PDFEngine.mergePDFs(files);
         const blob = new Blob([result], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
@@ -88,14 +91,15 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
           name: 'merged_document.pdf',
           url: url
         });
-        updateStep('processing', 'completed', 100);
+        setProgress(100);
       } else {
         // Handle other PDF operations
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
-          const progress = ((i + 1) / files.length) * 100;
+          const fileProgress = ((i + 1) / files.length) * 100;
 
-          updateStep('processing', 'processing', progress);
+          setCurrentStep(`Processing ${file.name}...`);
+          setProgress(fileProgress);
 
           let result: Uint8Array;
           switch (tool) {
@@ -160,11 +164,10 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
             url: url
           });
         }
-
-        updateStep('processing', 'completed', 100);
       }
 
-      updateStep('finalizing', 'completed', 100);
+      setCurrentStep('Processing complete!');
+      setProgress(100);
       setResults(processedResults);
       
       toast.success(`Successfully processed ${processedResults.length} file(s)`);
@@ -172,46 +175,12 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
     } catch (error) {
       console.error('Processing error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      setError(errorMessage);
       toast.error(`Processing failed: ${errorMessage}`);
-      
-      // Mark current step as error
-      setSteps(prev => prev.map(step => 
-        step.status === 'processing' 
-          ? { ...step, status: 'error' as const }
-          : step
-      ));
     } finally {
       setProcessing(false);
     }
   }, [files, tool, options, toolId]);
-
-  const getProcessingSteps = (tool: ProcessingTool, fileCount: number): ProcessingStep[] => {
-    const baseSteps = [
-      { id: 'validation', name: 'Validating files', status: 'completed' as const, progress: 100 },
-    ];
-
-    if (tool === "image-to-pdf") {
-      return [
-        ...baseSteps,
-        { id: 'converting', name: 'Converting images to PDF', status: 'pending' as const, progress: 0 },
-        { id: 'finalizing', name: 'Finalizing documents', status: 'pending' as const, progress: 0 },
-      ];
-    }
-
-    return [
-      ...baseSteps,
-      { id: 'processing', name: `Processing ${fileCount} file(s)`, status: 'pending' as const, progress: 0 },
-      { id: 'finalizing', name: 'Finalizing results', status: 'pending' as const, progress: 0 },
-    ];
-  };
-
-  const updateStep = (stepId: string, status: ProcessingStep['status'], progress: number) => {
-    setSteps(prev => prev.map(step => 
-      step.id === stepId 
-        ? { ...step, status, progress }
-        : step
-    ));
-  };
 
   const downloadFile = (url: string, filename: string) => {
     const link = document.createElement('a');
@@ -255,15 +224,18 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
         files={files}
         onFilesChange={setFiles}
         acceptedTypes={tool === "image-to-pdf" ? "image/*" : ".pdf"}
-        disabled={processing}
       />
 
       {/* Processing */}
       {(processing || results.length > 0) && (
         <div className="space-y-6">
           <ProgressTracker 
-            steps={steps} 
             isProcessing={processing}
+            progress={progress}
+            currentStep={currentStep}
+            error={error}
+            totalFiles={files.length}
+            processedFiles={progress === 100 ? files.length : Math.floor((progress / 100) * files.length)}
           />
           
           {/* Process Button */}
