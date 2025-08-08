@@ -1,0 +1,256 @@
+
+# PDF Tools Website - Complete Generation Prompt
+
+## Project Overview
+Create a professional PDF tools website inspired by ilovepdf.com but with completely original branding and design. The site should offer 20+ PDF manipulation tools with client-side processing to avoid server limitations.
+
+## Technical Requirements
+
+### Core Technologies
+- React 18.3+ with TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling with custom design system
+- PDF-lib for client-side PDF manipulation
+- React Router for navigation
+- Shadcn/ui components for consistent UI
+- Lucide React for icons
+
+### Client-Side Processing
+- All PDF operations must run in the browser using PDF-lib
+- No server-side PDF storage (compliance with free hosting)
+- File size limit: 10MB per file
+- Support for multiple file uploads where applicable
+- Real-time progress indicators during processing
+- Automatic file cleanup and memory management
+
+## Design System & Theme
+
+### Color Palette (HSL Values)
+- Primary: Orange to Red gradient (217 91% 60% to 14 100% 57%)
+- Background: Clean whites with subtle gray tints
+- Foreground: Dark grays (215 28% 17%)
+- Muted: Light grays for subtle elements (210 40% 96%)
+- Accent colors for categories:
+  - Convert: Blue (217 91% 60%)
+  - Edit: Green variations
+  - Organize: Purple tones
+  - Security: Red tones
+  - AI: Orange gradients
+
+### Typography
+- Font Family: Inter (system font fallback)
+- Headings: Bold, clear hierarchy (H1: 4xl-7xl, H2: 3xl-4xl, H3: xl-2xl)
+- Body: Regular weight, good readability (text-base to text-xl)
+- UI Elements: Medium weight for buttons and labels
+
+### Visual Style
+- Modern, clean, minimalist design
+- Subtle gradients and shadows for depth
+- Rounded corners (0.5rem default radius)
+- Card-based layout for tools
+- Hover effects with gentle transforms (-translate-y-1)
+- Smooth transitions (300ms duration)
+- Professional color gradients (orange-to-red primary theme)
+
+## Layout & Components
+
+### Header
+- Clean navigation with logo on left
+- Main navigation: Tools, Features, About
+- Theme toggle (light/dark mode support)
+- Mobile-responsive hamburger menu
+- Sticky/fixed positioning
+
+### Hero Section
+- Large, compelling headline about PDF mastery
+- Subtitle explaining free, secure, client-side processing
+- Trust indicators (user count, security badges)
+- Multiple CTAs: "Start Processing PDFs", "View All Tools"
+- Feature highlight cards (Fast, Secure, Mobile-friendly)
+- Gradient background with subtle patterns
+
+### Tools Grid
+- 4-column grid on desktop, responsive down to 1 column
+- Each tool as a card with:
+  - Category-colored icon background
+  - Clear tool title
+  - Brief description
+  - Category badge
+  - "New" or "AI" badges where applicable
+  - Hover effects and accessibility support
+
+### Individual Tool Pages
+- Clear H1 with tool name
+- Step-by-step usage instructions
+- File upload area with drag-and-drop
+- Processing options/settings where applicable
+- Progress indicators
+- Download area for results
+- "Back to Tools" navigation
+
+## PDF Tools to Implement
+
+### Core Tools (Must Have)
+1. **Merge PDF** - Combine multiple PDFs into one
+2. **Split PDF** - Extract pages or split into multiple files
+3. **Compress PDF** - Reduce file size while maintaining quality
+4. **Rotate PDF** - Rotate pages by 90/180/270 degrees
+5. **Extract Pages** - Pull out specific page ranges
+6. **Crop PDF** - Trim pages to custom dimensions
+7. **Add Watermark** - Text or image watermarks
+
+### Conversion Tools
+8. **PDF to JPG** - Convert pages to high-quality images
+9. **PDF to PNG** - Convert to PNG format
+10. **PDF to Text** - Extract text content
+11. **Image to PDF** - Convert JPG/PNG to PDF
+12. **PDF to Word** - (Limited client-side capability)
+13. **PDF to Excel** - (Limited client-side capability)
+
+### Security Tools
+14. **Protect PDF** - Add password protection
+15. **Unlock PDF** - Remove passwords (if known)
+
+### Advanced Tools
+16. **Edit PDF** - Add text, images, annotations
+17. **View PDF** - In-browser PDF viewer with zoom
+18. **Organize Pages** - Reorder, delete, duplicate pages
+
+## User Experience Features
+
+### File Handling
+- Drag-and-drop upload areas
+- Multiple file selection support
+- File type validation (.pdf, .jpg, .png, .docx as appropriate)
+- File size validation (10MB limit with clear messaging)
+- Visual feedback during file selection
+
+### Processing Experience
+- Loading spinners and progress bars
+- Step-by-step progress indicators
+- Clear error messages for failures
+- Success confirmations
+- Automatic download triggers
+- Option to process additional files
+
+### Accessibility
+- Proper ARIA labels and descriptions
+- Keyboard navigation support
+- Screen reader compatibility
+- High contrast mode support
+- Focus indicators on interactive elements
+
+## Technical Implementation Details
+
+### File Processing Flow
+1. User selects files via input or drag-drop
+2. Client-side validation (type, size, corruption)
+3. Display file information and processing options
+4. Use PDF-lib for manipulation in Web Worker (if heavy)
+5. Generate result blob
+6. Trigger automatic download with proper filename
+7. Clean up memory and allow new operations
+
+### Error Handling
+- Try-catch blocks around all PDF operations
+- User-friendly error messages
+- Fallback options where possible
+- Console logging for debugging
+- Network failure handling
+
+### Performance Optimization
+- Lazy loading of tool pages
+- PDF-lib loaded only when needed
+- Image optimization and compression
+- Minimal JavaScript bundles
+- Efficient memory management
+
+## SEO & Content Strategy
+
+### Meta Information
+- Each page needs unique title and description
+- Tool pages: "Tool Name - Free Online PDF Tool | Site Name"
+- Descriptions: Clear, benefit-focused, keyword-rich
+- Open Graph tags for social sharing
+
+### Content Structure
+- H1 for main page/tool titles
+- H2 for sections and features
+- H3 for subsections
+- Bullet points for features and steps
+- Clear, scannable content layout
+
+### Keywords to Target
+- "free PDF tools", "online PDF converter", "PDF merger"
+- "split PDF online", "compress PDF free"
+- "PDF editor", "PDF viewer", "secure PDF tools"
+- Long-tail: "how to merge PDF files online free"
+
+## Responsive Design Requirements
+
+### Breakpoints
+- Mobile: 640px and below (1 column grid)
+- Tablet: 641px to 1024px (2-3 column grid)
+- Desktop: 1025px and above (4 column grid)
+- Large: 1280px+ (wider containers, more spacing)
+
+### Mobile Optimizations
+- Touch-friendly buttons (44px minimum)
+- Simplified navigation
+- Collapsible sections
+- Optimized file upload for mobile browsers
+- Reduced animations for performance
+
+## Brand Guidelines
+
+### Tone of Voice
+- Professional but approachable
+- Helpful and educational
+- Security and privacy focused
+- No AI or technology jargon
+- Clear, action-oriented language
+
+### Visual Identity
+- Original logo design (no copying from competitors)
+- Orange-to-red gradient as primary brand element
+- Clean, modern iconography
+- Consistent spacing and typography
+- Professional photography/illustrations
+
+### Content Principles
+- No mention of AI tools or external services
+- Focus on user benefits and ease of use
+- Emphasize security, privacy, and speed
+- Original content only (no copying)
+- Clear, step-by-step instructions
+
+## Browser Compatibility
+
+### Target Browsers
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+### Features to Test
+- File API support
+- PDF-lib compatibility
+- Download functionality
+- Canvas rendering (for advanced features)
+- Local storage for preferences
+
+## Performance Targets
+- Lighthouse Performance Score: 90+
+- First Contentful Paint: Under 1.5s
+- Largest Contentful Paint: Under 2.5s
+- Time to Interactive: Under 3s
+- File processing: Should handle 5-10MB PDFs smoothly
+
+## Security Considerations
+- All processing client-side only
+- No file uploads to server
+- No data persistence beyond session
+- Clear privacy messaging
+- Secure HTTPS connections
+
+This prompt provides a comprehensive blueprint for creating a professional, original PDF tools website that respects hosting limitations while providing excellent user experience and SEO performance.
