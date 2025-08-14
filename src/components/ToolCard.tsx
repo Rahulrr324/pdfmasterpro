@@ -69,8 +69,8 @@ export const ToolCard = ({
         >
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${categoryColors[category]}`}>
-                <Icon className="w-6 h-6" aria-hidden="true" />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                <Icon className="w-6 h-6 text-primary" aria-hidden="true" />
               </div>
               <div className="flex gap-2">
                 {isNew && (
