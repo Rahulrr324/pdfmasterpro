@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { ToolCard } from "./ToolCard";
 import { 
@@ -207,9 +208,10 @@ const tools = [
 
 interface ToolsGridProps {
   filter?: "convert" | "edit" | "organize" | "security" | "ai" | "optimize";
+  showTitle?: boolean;
 }
 
-export const ToolsGrid = ({ filter }: ToolsGridProps) => {
+export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
   const navigate = useNavigate();
 
   const handleToolClick = (toolId: string) => {
@@ -217,13 +219,13 @@ export const ToolsGrid = ({ filter }: ToolsGridProps) => {
   };
 
   const filteredTools = filter ? tools.filter(tool => {
-    if (filter === "ai") return tool.isPremium; // AI tools are premium tools
+    if (filter === "ai") return tool.isPremium;
     if (filter === "optimize") return tool.category === "optimize";
     return tool.category === filter;
   }) : tools;
 
   const getSectionTitle = () => {
-    if (!filter) return "Professional PDF Tools";
+    if (!filter) return "All Tools";
     switch (filter) {
       case "convert": return "Convert PDF Tools";
       case "edit": return "Edit PDF Tools";
@@ -235,30 +237,16 @@ export const ToolsGrid = ({ filter }: ToolsGridProps) => {
     }
   };
 
-  const getSectionDescription = () => {
-    if (!filter) return "Everything you need to work with PDF files. Fast, secure, and completely free.";
-    switch (filter) {
-      case "convert": return "Transform PDFs to different formats and vice versa.";
-      case "edit": return "Modify and enhance your PDF documents.";
-      case "organize": return "Manage and structure your PDF files efficiently.";
-      case "security": return "Protect and secure your PDF documents.";
-      case "ai": return "Advanced AI-powered features for your PDFs.";
-      case "optimize": return "Reduce file size and improve PDF performance.";
-      default: return "Everything you need to work with PDF files. Fast, secure, and completely free.";
-    }
-  };
-
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-muted/20">
+    <section className={`py-16 ${!filter ? 'bg-gradient-to-b from-background to-muted/20' : ''}`}>
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
-            {getSectionTitle()}
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {getSectionDescription()}
-          </p>
-        </div>
+        {showTitle && (
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              {getSectionTitle()}
+            </h2>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {filteredTools.map((tool) => (

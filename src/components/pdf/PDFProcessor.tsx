@@ -3,9 +3,12 @@ import React, { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { FileUploader } from './FileUploader';
 import { ProgressTracker } from './ProgressTracker';
+import { PDFToolOptions } from './PDFToolOptions';
 import { PDFEngine } from './PDFEngine';
 import { Button } from '@/components/ui/button';
-import { Download, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Download, ArrowLeft, RefreshCw, Upload } from 'lucide-react';
 
 export type ProcessingTool = 
   | "view" 
@@ -26,13 +29,6 @@ export interface PDFProcessorProps {
   tool: ProcessingTool;
   onBack?: () => void;
   toolId?: string;
-}
-
-interface ProcessingStep {
-  id: string;
-  name: string;
-  status: 'pending' | 'processing' | 'completed' | 'error';
-  progress: number;
 }
 
 export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId }) => {
@@ -59,9 +55,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
     try {
       let processedResults: { name: string; url: string }[] = [];
 
-      // Process files based on tool type
       if (tool === "image-to-pdf") {
-        // Handle image to PDF conversion
         const imageFiles = files.filter(file => file.type.startsWith('image/'));
         if (imageFiles.length === 0) {
           throw new Error('Please select image files for conversion');
@@ -93,7 +87,6 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
         });
         setProgress(100);
       } else {
-        // Handle other PDF operations
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const fileProgress = ((i + 1) / files.length) * 100;
@@ -141,7 +134,6 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
             case "convert":
               const convertResult = await PDFEngine.convertPDF(file, { ...options, toolId });
               if (typeof convertResult === 'string') {
-                // Text extraction result
                 const blob = new Blob([convertResult], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
                 processedResults.push({
@@ -198,8 +190,17 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
     toast.success('All files downloaded successfully');
   };
 
+  const startNew = () => {
+    setFiles([]);
+    setResults([]);
+    setError('');
+    setProgress(0);
+    setCurrentStep('');
+    setOptions({});
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
         {onBack && (
@@ -209,7 +210,9 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
           </Button>
         )}
         <div>
-          <h1 className="text-3xl font-bold capitalize">{tool.replace('-', ' ')} Tool</h1>
+          <h1 className="text-2xl md:text-3xl font-bold capitalize">
+            {tool.replace('-', ' ')} Tool
+          </h1>
           <p className="text-muted-foreground">
             {tool === "image-to-pdf" 
               ? "Convert your images to PDF format"
@@ -219,14 +222,53 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
         </div>
       </div>
 
-      {/* File Upload */}
-      <FileUploader
-        files={files}
-        onFilesChange={setFiles}
-        acceptedTypes={tool === "image-to-pdf" ? "image/*" : ".pdf"}
-      />
+      {/* Upload Section */}
+      {results.length === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              Upload Files
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FileUploader
+              files={files}
+              onFilesChange={setFiles}
+              acceptedTypes={tool === "image-to-pdf" ? "image/*" : ".pdf"}
+            />
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Processing */}
+      {/* Settings Section */}
+      {files.length > 0 && !processing && results.length === 0 && (
+        <div className="space-y-6">
+          <PDFToolOptions
+            tool={tool}
+            options={options}
+            onOptionsChange={setOptions}
+            toolId={toolId}
+          />
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-center">
+                <Button 
+                  onClick={processFiles}
+                  size="lg"
+                  className="px-8"
+                  disabled={processing}
+                >
+                  {processing ? 'Processing...' : 'Process Files'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Processing Progress */}
       {(processing || results.length > 0) && (
         <div className="space-y-6">
           <ProgressTracker 
@@ -237,47 +279,51 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
             totalFiles={files.length}
             processedFiles={progress === 100 ? files.length : Math.floor((progress / 100) * files.length)}
           />
-          
-          {/* Process Button */}
-          {files.length > 0 && !processing && results.length === 0 && (
-            <div className="flex justify-center">
-              <Button 
-                onClick={processFiles}
-                size="lg"
-                className="px-8"
-              >
-                Start Processing
-              </Button>
-            </div>
-          )}
 
-          {/* Results */}
+          {/* Results Section */}
           {results.length > 0 && (
-            <div className="bg-card border rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Processing Complete</h3>
-                <Button onClick={downloadAllFiles} className="flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  Download All
-                </Button>
-              </div>
-              
-              <div className="space-y-2">
-                {results.map((result, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="font-medium">{result.name}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => downloadFile(result.url, result.name)}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Processing Complete</span>
+                  <div className="flex gap-2">
+                    <Button onClick={downloadAllFiles} className="flex items-center gap-2">
+                      <Download className="w-4 h-4" />
+                      Download All
+                    </Button>
+                    <Button onClick={startNew} variant="outline" className="flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4" />
+                      Start New
                     </Button>
                   </div>
-                ))}
-              </div>
-            </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {results.map((result, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                      <span className="font-medium">{result.name}</span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadFile(result.url, result.name)}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="text-sm text-muted-foreground text-center">
+                  <p>Files are processed locally in your browser for maximum privacy and security.</p>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
