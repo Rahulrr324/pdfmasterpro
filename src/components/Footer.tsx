@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Shield, Zap, Github, Twitter, Linkedin } from "lucide-react";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -59,29 +60,29 @@ export const Footer = () => {
               <div 
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
                 role="img"
-                aria-label="PDFMaster Pro Logo"
+                aria-label={`${BRAND_NAME} Logo`}
               >
                 <span className="text-lg font-bold" aria-hidden="true">PM</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                  PDFMaster Pro
+                  {BRAND_NAME}
                 </span>
                 <span className="text-xs text-muted-foreground -mt-1">Professional PDF Tools</span>
               </div>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md">
               The most comprehensive PDF toolkit on the web. Convert, edit, organize, and secure 
-              your documents with 20+ professional tools, all completely free.
+              your documents with 25+ professional tools, all completely free and secure.
             </p>
             <div className="flex space-x-4 mb-6">
               <div className="flex items-center space-x-2 text-sm">
                 <Shield className="h-4 w-4 text-green-600" aria-hidden="true" />
-                <span>100% Secure</span>
+                <span>100% Secure & Private</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
                 <Zap className="h-4 w-4 text-orange-600" aria-hidden="true" />
-                <span>Lightning Fast</span>
+                <span>Lightning Fast Processing</span>
               </div>
             </div>
             {/* Social Links */}
@@ -125,15 +126,15 @@ export const Footer = () => {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
           <div className="flex flex-col space-y-2">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} PDFMaster Pro. All rights reserved.
+              © {currentYear} {BRAND_NAME}. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground">
-              Professional PDF tools for everyone. No registration required.
+              Professional PDF tools for everyone. No registration required, completely free.
             </p>
           </div>
 
           <div className="text-sm text-muted-foreground">
-            Made with ❤️ for PDF professionals
+            Made with ❤️ for PDF professionals worldwide
           </div>
         </div>
       </div>

@@ -1,26 +1,44 @@
 
 {
-  "name": "PdfMaster Pro - Professional PDF Tools",
-  "short_name": "PdfMaster Pro",
-  "description": "Professional PDF tools suite with 25+ free online tools",
+  "name": "PDFMaster Pro - Professional PDF Tools Suite",
+  "short_name": "PDFMaster Pro",
+  "description": "Professional PDF tools suite with 25+ free online tools for converting, editing, organizing and securing PDF documents",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#FF6B6B",
   "orientation": "portrait-primary",
-  "categories": ["productivity", "utilities"],
+  "categories": ["productivity", "utilities", "business"],
+  "lang": "en",
+  "scope": "/",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23FF6B6B'/><stop offset='100%25' style='stop-color:%23FF8E53'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><text x='50' y='65' font-family='Arial,sans-serif' font-size='32' font-weight='bold' text-anchor='middle' fill='white'>PM</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23FF6B6B'/><stop offset='100%25' style='stop-color:%23FF8E53'/></linearGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23g)'/><rect x='25' y='20' width='50' height='60' rx='4' fill='white' fill-opacity='0.95'/><rect x='30' y='25' width='40' height='50' rx='2' fill='url(%23g)'/><text x='50' y='42' font-family='Arial,sans-serif' font-size='12' font-weight='bold' text-anchor='middle' fill='white'>PDF</text><text x='50' y='58' font-family='Arial,sans-serif' font-size='8' font-weight='bold' text-anchor='middle' fill='white'>MASTER</text></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23FF6B6B'/><stop offset='100%25' style='stop-color:%23FF8E53'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><text x='50' y='65' font-family='Arial,sans-serif' font-size='32' font-weight='bold' text-anchor='middle' fill='white'>PM</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23FF6B6B'/><stop offset='100%25' style='stop-color:%23FF8E53'/></linearGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23g)'/><rect x='25' y='20' width='50' height='60' rx='4' fill='white' fill-opacity='0.95'/><rect x='30' y='25' width='40' height='50' rx='2' fill='url(%23g)'/><text x='50' y='42' font-family='Arial,sans-serif' font-size='12' font-weight='bold' text-anchor='middle' fill='white'>PDF</text><text x='50' y='58' font-family='Arial,sans-serif' font-size='8' font-weight='bold' text-anchor='middle' fill='white'>MASTER</text></svg>",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Convert PDF",
+      "short_name": "Convert",
+      "description": "Convert PDF to other formats",
+      "url": "/category/convert",
+      "icons": [{ "src": "/favicon.ico", "sizes": "32x32" }]
+    },
+    {
+      "name": "Merge PDF",
+      "short_name": "Merge",
+      "description": "Combine multiple PDFs",
+      "url": "/tool/merge-pdf",
+      "icons": [{ "src": "/favicon.ico", "sizes": "32x32" }]
     }
   ]
 }

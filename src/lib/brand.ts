@@ -1,2 +1,2 @@
 
-export const BRAND_NAME = "DocuSphere";
+export const BRAND_NAME = "PDFMaster Pro";
