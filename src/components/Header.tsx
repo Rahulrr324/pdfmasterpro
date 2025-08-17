@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Menu, X } from "lucide-react";
+import { Moon, Sun, Menu } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Logo } from "@/components/logo";
 
 export const Header = () => {
   const { setTheme, theme } = useTheme();
@@ -40,22 +41,10 @@ export const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div 
-            className="flex items-center space-x-3 cursor-pointer"
+            className="flex items-center cursor-pointer"
             onClick={handleLogoClick}
           >
-            <div 
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
-              role="img"
-              aria-label="PDFMaster Pro Logo"
-            >
-              <span className="text-lg font-bold" aria-hidden="true">PM</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-foreground bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                PDFMaster Pro
-              </span>
-              <span className="text-xs text-muted-foreground -mt-1">Professional PDF Tools</span>
-            </div>
+            <Logo />
           </div>
 
           {/* Desktop Navigation */}

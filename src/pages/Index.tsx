@@ -10,7 +10,7 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
-        <section id="tools">
+        <section id="tools" className="py-8">
           <ToolsGrid />
         </section>
       </main>
