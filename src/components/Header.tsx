@@ -13,29 +13,21 @@ export const Header = () => {
   const navigate = useNavigate();
 
   const navigation = [
-    { name: "All Tools", href: "#tools", section: "tools" },
-    { name: "Convert", href: "#convert", section: "convert" },
-    { name: "Edit", href: "#edit", section: "edit" },
-    { name: "Organize", href: "#organize", section: "organize" },
-    { name: "Security", href: "#security", section: "security" },
-    { name: "AI Tools", href: "#ai", section: "ai" },
+    { name: "Convert", href: "/category/convert" },
+    { name: "Edit", href: "/category/edit" },
+    { name: "Organize", href: "/category/organize" },
+    { name: "Security", href: "/category/security" },
+    { name: "AI Tools", href: "/category/ai" },
+    { name: "Categories", href: "/categories" },
   ];
 
-  const isActiveSection = (section: string) => {
-    const hash = location.hash.replace('#', '');
-    return hash === section;
+  const isActiveSection = (href: string) => {
+    return location.pathname === href;
   };
 
-  const handleNavClick = (href: string, section: string) => {
+  const handleNavClick = (href: string) => {
     setIsOpen(false);
-    if (location.pathname !== '/') {
-      navigate(`/${href}`);
-    } else {
-      const element = document.getElementById(section);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
+    navigate(href);
   };
 
   const handleLogoClick = () => {
@@ -54,13 +46,13 @@ export const Header = () => {
             <div 
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
               role="img"
-              aria-label="PdfMaster Pro Logo"
+              aria-label="PDFMaster Pro Logo"
             >
               <span className="text-lg font-bold" aria-hidden="true">PM</span>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold text-foreground bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                PdfMaster Pro
+                PDFMaster Pro
               </span>
               <span className="text-xs text-muted-foreground -mt-1">Professional PDF Tools</span>
             </div>
@@ -71,13 +63,13 @@ export const Header = () => {
             {navigation.map((item) => (
               <button
                 key={item.name}
-                onClick={() => handleNavClick(item.href, item.section)}
+                onClick={() => handleNavClick(item.href)}
                 className={`text-sm font-medium transition-colors hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded px-2 py-1 ${
-                  isActiveSection(item.section) 
+                  isActiveSection(item.href) 
                     ? 'text-orange-600 font-semibold' 
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
-                aria-current={isActiveSection(item.section) ? "page" : undefined}
+                aria-current={isActiveSection(item.href) ? "page" : undefined}
                 aria-label={`Navigate to ${item.name} section`}
               >
                 {item.name}
@@ -127,13 +119,13 @@ export const Header = () => {
                   {navigation.map((item) => (
                     <button
                       key={item.name}
-                      onClick={() => handleNavClick(item.href, item.section)}
+                      onClick={() => handleNavClick(item.href)}
                       className={`text-sm font-medium transition-colors text-left px-2 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                        isActiveSection(item.section)
+                        isActiveSection(item.href)
                           ? 'text-orange-600 font-semibold bg-orange-50 dark:bg-orange-900/20'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
-                      aria-current={isActiveSection(item.section) ? "page" : undefined}
+                      aria-current={isActiveSection(item.href) ? "page" : undefined}
                     >
                       {item.name}
                     </button>

@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Mail, Shield, Zap, Github, Twitter, Linkedin } from "lucide-react";
+import { Shield, Zap, Github, Twitter, Linkedin } from "lucide-react";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -13,9 +13,9 @@ export const Footer = () => {
         { name: "PDF to Word", href: "/tool/pdf-to-word" },
         { name: "PDF to Excel", href: "/tool/pdf-to-excel" }, 
         { name: "PDF to JPG", href: "/tool/pdf-to-jpg" },
-        { name: "Word to PDF", href: "#word-to-pdf" },
-        { name: "Excel to PDF", href: "#excel-to-pdf" },
-        { name: "JPG to PDF", href: "#jpg-to-pdf" }
+        { name: "Word to PDF", href: "/tool/word-to-pdf" },
+        { name: "Excel to PDF", href: "/tool/excel-to-pdf" },
+        { name: "Image to PDF", href: "/tool/image-to-pdf" }
       ]
     },
     {
@@ -30,14 +30,14 @@ export const Footer = () => {
       ]
     },
     {
-      title: "Security & AI",
+      title: "Security & More",
       links: [
         { name: "Protect PDF", href: "/tool/protect-pdf" },
-        { name: "Unlock PDF", href: "#unlock-pdf" },
-        { name: "AI Metadata", href: "#ai-metadata" },
-        { name: "Plagiarism Scanner", href: "#plagiarism-scanner" },
-        { name: "PDF Repair", href: "#pdf-repair" },
-        { name: "Accessible PDF", href: "#accessible-pdf" }
+        { name: "Unlock PDF", href: "/tool/unlock-pdf" },
+        { name: "View PDF", href: "/tool/view-pdf" },
+        { name: "Extract Pages", href: "/tool/extract-pages" },
+        { name: "Watermark PDF", href: "/tool/watermark-pdf" },
+        { name: "All Categories", href: "/categories" }
       ]
     }
   ];
@@ -46,14 +46,6 @@ export const Footer = () => {
     { name: "Github", href: "#github", icon: Github },
     { name: "Twitter", href: "#twitter", icon: Twitter },
     { name: "LinkedIn", href: "#linkedin", icon: Linkedin }
-  ];
-
-  const policyLinks = [
-    { name: "Privacy Policy", href: "#privacy" },
-    { name: "Terms of Service", href: "#terms" },
-    { name: "Cookie Policy", href: "#cookies" },
-    { name: "Contact Us", href: "#contact" },
-    { name: "Help Center", href: "#help" }
   ];
 
   return (
@@ -67,20 +59,20 @@ export const Footer = () => {
               <div 
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
                 role="img"
-                aria-label="PdfMaster Pro Logo"
+                aria-label="PDFMaster Pro Logo"
               >
                 <span className="text-lg font-bold" aria-hidden="true">PM</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                  PdfMaster Pro
+                  PDFMaster Pro
                 </span>
                 <span className="text-xs text-muted-foreground -mt-1">Professional PDF Tools</span>
               </div>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md">
               The most comprehensive PDF toolkit on the web. Convert, edit, organize, and secure 
-              your documents with 25+ professional tools, all completely free.
+              your documents with 20+ professional tools, all completely free.
             </p>
             <div className="flex space-x-4 mb-6">
               <div className="flex items-center space-x-2 text-sm">
@@ -133,40 +125,15 @@ export const Footer = () => {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
           <div className="flex flex-col space-y-2">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} PdfMaster Pro. All rights reserved.
+              © {currentYear} PDFMaster Pro. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground">
               Professional PDF tools for everyone. No registration required.
             </p>
           </div>
 
-          <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-6">
-            {/* Policy Links */}
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              {policyLinks.map((policy, index) => (
-                <a 
-                  key={index}
-                  href={policy.href} 
-                  className="text-muted-foreground hover:text-orange-600 transition-colors focus:outline-none focus:text-orange-600 focus:underline"
-                >
-                  {policy.name}
-                </a>
-              ))}
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-950/20 focus:ring-2 focus:ring-orange-500"
-              >
-                <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
-                Newsletter
-              </Button>
-              <div className="text-sm text-muted-foreground">
-                Made with ❤️ for PDF lovers
-              </div>
-            </div>
+          <div className="text-sm text-muted-foreground">
+            Made with ❤️ for PDF professionals
           </div>
         </div>
       </div>

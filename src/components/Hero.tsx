@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Zap, Shield, Smartphone, ArrowRight, Star } from "lucide-react";
-import { BRAND_NAME } from "@/lib/brand";
 
 export const Hero = () => {
   const scrollToTools = () => {
@@ -25,12 +24,15 @@ export const Hero = () => {
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-            The Future of Document Management is Here
+            Professional PDF Tools
+            <span className="block text-transparent bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text">
+              Made Simple
+            </span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-            {BRAND_NAME} offers a powerful and intuitive suite of tools to handle all your PDF needs. 
+            PDFMaster Pro offers a powerful and intuitive suite of tools to handle all your PDF needs. 
             Secure, fast, and entirely in your browser.
           </p>
 
@@ -55,7 +57,7 @@ export const Hero = () => {
             <Button 
               size="lg" 
               onClick={scrollToTools}
-              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all transform hover:scale-105 focus:ring-4 focus:ring-primary/50 px-8 py-4 text-lg"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 focus:ring-4 focus:ring-orange-500/50 px-8 py-4 text-lg"
               aria-label="Start processing PDF files"
             >
               <FileText className="w-5 h-5 mr-2" aria-hidden="true" />
@@ -67,8 +69,8 @@ export const Hero = () => {
           {/* Feature Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-primary/10 bg-card/50 backdrop-blur-sm">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-6 h-6 text-primary" aria-hidden="true" />
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-6 h-6 text-orange-600 dark:text-orange-400" aria-hidden="true" />
               </div>
               <h3 className="font-semibold text-lg mb-2">Lightning Fast</h3>
               <p className="text-muted-foreground text-sm">
