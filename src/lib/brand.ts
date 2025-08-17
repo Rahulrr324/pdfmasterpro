@@ -1,2 +1,2 @@
 
-export const BRAND_NAME = "PDFMaster Pro";
+export const BRAND_NAME = "PDFPro Studio";

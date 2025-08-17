@@ -1,8 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Shield, Zap, Github, Twitter, Linkedin } from "lucide-react";
 import { BRAND_NAME } from "@/lib/brand";
+import { PDFProLogo } from "@/components/icons/pdfpro-logo";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -57,23 +57,17 @@ export const Footer = () => {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <div 
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
-                role="img"
-                aria-label={`${BRAND_NAME} Logo`}
-              >
-                <span className="text-lg font-bold" aria-hidden="true">PM</span>
-              </div>
+              <PDFProLogo className="w-10 h-10" />
               <div className="flex flex-col">
-                <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
                   {BRAND_NAME}
                 </span>
-                <span className="text-xs text-muted-foreground -mt-1">Professional PDF Tools</span>
+                <span className="text-xs text-muted-foreground -mt-1">Professional PDF Suite</span>
               </div>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md">
-              The most comprehensive PDF toolkit on the web. Convert, edit, organize, and secure 
-              your documents with 25+ professional tools, all completely free and secure.
+              The most comprehensive and professional PDF toolkit on the web. Convert, edit, organize, and secure 
+              your documents with 25+ advanced tools, all completely free and secure.
             </p>
             <div className="flex space-x-4 mb-6">
               <div className="flex items-center space-x-2 text-sm">
@@ -81,7 +75,7 @@ export const Footer = () => {
                 <span>100% Secure & Private</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
-                <Zap className="h-4 w-4 text-orange-600" aria-hidden="true" />
+                <Zap className="h-4 w-4 text-purple-600" aria-hidden="true" />
                 <span>Lightning Fast Processing</span>
               </div>
             </div>
@@ -109,7 +103,7 @@ export const Footer = () => {
                   <li key={linkIndex}>
                     <a 
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-orange-600 transition-colors focus:outline-none focus:text-orange-600 focus:underline"
+                      className="text-sm text-muted-foreground hover:text-purple-600 transition-colors focus:outline-none focus:text-purple-600 focus:underline"
                     >
                       {link.name}
                     </a>
@@ -129,7 +123,7 @@ export const Footer = () => {
               © {currentYear} {BRAND_NAME}. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground">
-              Professional PDF tools for everyone. No registration required, completely free.
+              Professional PDF tools for everyone. No registration required, completely free and secure.
             </p>
           </div>
 
