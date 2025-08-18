@@ -1,9 +1,7 @@
 
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { TopPriorityTools } from "@/components/TopPriorityTools";
-import { ConversionDropdowns } from "@/components/ConversionDropdowns";
-import { AdditionalTools } from "@/components/AdditionalTools";
+import { ToolsGrid } from "@/components/ToolsGrid";
 import { Footer } from "@/components/Footer";
 import { SITE_CONFIG } from "@/lib/config";
 import { useEffect } from "react";
@@ -116,10 +114,8 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
-        <section id="tools" aria-label="PDF Tools Collection">
-          <TopPriorityTools />
-          <ConversionDropdowns />
-          <AdditionalTools />
+        <section id="tools" className="py-8" aria-label="PDF Tools Collection">
+          <ToolsGrid />
         </section>
       </main>
       <Footer />
