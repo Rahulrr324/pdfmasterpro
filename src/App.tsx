@@ -37,10 +37,15 @@ if ('serviceWorker' in navigator) {
 }
 
 const App: React.FC = () => {
+  // Scroll to top on route changes
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="dark" storageKey="pdf-pro-suite-theme">
+        <ThemeProvider defaultTheme="light" storageKey="pdf-pro-suite-theme">
           <TooltipProvider delayDuration={300}>
             <Toaster />
             <Sonner />

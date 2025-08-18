@@ -1,8 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Zap, Github, Twitter, Linkedin } from "lucide-react";
-import { BRAND_NAME } from "@/lib/brand";
-import { PDFProLogo } from "@/components/icons/pdfpro-logo";
+import { Shield, Zap, Github, Twitter, Linkedin, Facebook, Instagram } from "lucide-react";
+import { SITE_CONFIG } from "@/lib/config";
+import { ModernPDFLogo } from "@/components/icons/modern-pdf-logo";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -43,55 +44,69 @@ export const Footer = () => {
     }
   ];
 
-  const socialLinks = [
-    { name: "Github", href: "#github", icon: Github },
-    { name: "Twitter", href: "#twitter", icon: Twitter },
-    { name: "LinkedIn", href: "#linkedin", icon: Linkedin }
-  ];
+  const socialIcons = {
+    github: Github,
+    twitter: Twitter,
+    linkedin: Linkedin,
+    facebook: Facebook,
+    instagram: Instagram,
+  };
+
+  // Filter social links based on configuration
+  const visibleSocialLinks = Object.entries(SITE_CONFIG.social)
+    .filter(([_, config]) => config.show)
+    .map(([platform, config]) => ({
+      name: platform.charAt(0).toUpperCase() + platform.slice(1),
+      href: config.url,
+      icon: socialIcons[platform as keyof typeof socialIcons],
+    }));
 
   return (
-    <footer className="bg-muted/30 border-t" role="contentinfo">
+    <footer className="bg-gray-50 border-t" role="contentinfo">
       <div className="container mx-auto px-4 py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <PDFProLogo className="w-10 h-10" />
+              <ModernPDFLogo className="w-10 h-10" />
               <div className="flex flex-col">
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
-                  {BRAND_NAME}
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+                  {SITE_CONFIG.brand.name}
                 </span>
-                <span className="text-xs text-muted-foreground -mt-1">Professional PDF Suite</span>
+                <span className="text-xs text-muted-foreground -mt-1">{SITE_CONFIG.brand.tagline}</span>
               </div>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md">
-              The most comprehensive and professional PDF toolkit on the web. Convert, edit, organize, and secure 
-              your documents with 25+ advanced tools, all completely free and secure.
+              {SITE_CONFIG.brand.description}
             </p>
             <div className="flex space-x-4 mb-6">
               <div className="flex items-center space-x-2 text-sm">
-                <Shield className="h-4 w-4 text-green-600" aria-hidden="true" />
+                <Shield className="h-4 w-4 text-green-600" />
                 <span>100% Secure & Private</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
-                <Zap className="h-4 w-4 text-purple-600" aria-hidden="true" />
-                <span>Lightning Fast Processing</span>
+                <Zap className="h-4 w-4 text-blue-600" />
+                <span>Lightning Fast</span>
               </div>
             </div>
             {/* Social Links */}
-            <div className="flex space-x-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.href}
-                  className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  aria-label={`Follow us on ${social.name}`}
-                >
-                  <social.icon className="h-4 w-4" aria-hidden="true" />
-                </a>
-              ))}
-            </div>
+            {visibleSocialLinks.length > 0 && (
+              <div className="flex space-x-3">
+                {visibleSocialLinks.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-white hover:bg-blue-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    aria-label={`Follow us on ${social.name}`}
+                  >
+                    <social.icon className="h-4 w-4" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Tool Categories */}
@@ -103,7 +118,7 @@ export const Footer = () => {
                   <li key={linkIndex}>
                     <a 
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-purple-600 transition-colors focus:outline-none focus:text-purple-600 focus:underline"
+                      className="text-sm text-muted-foreground hover:text-blue-600 transition-colors focus:outline-none focus:text-blue-600 focus:underline"
                     >
                       {link.name}
                     </a>
@@ -120,7 +135,7 @@ export const Footer = () => {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
           <div className="flex flex-col space-y-2">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} {BRAND_NAME}. All rights reserved.
+              © {currentYear} {SITE_CONFIG.brand.name}. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground">
               Professional PDF tools for everyone. No registration required, completely free and secure.
