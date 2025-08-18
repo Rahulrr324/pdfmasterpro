@@ -4,11 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LucideIcon } from "lucide-react";
+import React from "react";
 
 interface ToolCardProps {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
   category: "convert" | "edit" | "organize" | "security" | "ai" | "optimize";
   isNew?: boolean;
   isPremium?: boolean;
