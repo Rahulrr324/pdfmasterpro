@@ -23,7 +23,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Register service worker for performance
+// Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -40,7 +40,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="pdf-pro-suite-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="pdf-pro-suite-theme">
           <TooltipProvider delayDuration={300}>
             <Toaster />
             <Sonner />

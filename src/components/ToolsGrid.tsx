@@ -1,10 +1,30 @@
+
 import { useNavigate } from "react-router-dom";
 import { ToolCard } from "./ToolCard";
 import { 
+  FileText, 
+  Scissors, 
+  RotateCcw, 
+  Archive, 
+  Shield, 
+  Eye,
+  FileImage,
+  FileSpreadsheet,
+  Download,
+  Crop,
+  Edit3,
+  Layers,
+  Lock,
+  Unlock,
+  FileUp,
+  FileDown,
+  Image,
+  Type,
+  FilePlus,
   Zap,
+  Settings,
   Star,
-  TrendingUp,
-  Sparkles
+  Globe
 } from "lucide-react";
 import { 
   MergePDFIcon, 
@@ -294,7 +314,7 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
   }) : tools;
 
   const getSectionTitle = () => {
-    if (!filter) return "Professional PDF Tools Suite";
+    if (!filter) return "Professional PDF Pro Suite";
     switch (filter) {
       case "convert": return "PDF Conversion Tools";
       case "edit": return "PDF Editing Tools";
@@ -302,53 +322,43 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
       case "security": return "PDF Security Tools";
       case "ai": return "AI-Powered PDF Tools";
       case "optimize": return "PDF Optimization Tools";
-      default: return "Professional PDF Tools Suite";
+      default: return "Professional PDF Pro Suite";
     }
   };
 
   const getSectionDescription = () => {
-    if (!filter) return "Transform, edit, organize, and secure your PDF documents with our comprehensive suite of 30+ professional tools";
+    if (!filter) return "Transform, edit, organize, and secure your PDF documents with our comprehensive suite of professional tools powered by advanced technology";
     switch (filter) {
-      case "convert": return "Convert PDFs to various formats and vice versa with professional-grade quality and speed";
-      case "edit": return "Modify, enhance, and customize your PDF documents with powerful editing capabilities";
-      case "organize": return "Merge, split, and organize your PDF files for optimal document management";
-      case "security": return "Protect and secure your PDF documents with advanced encryption and access controls";
-      case "ai": return "Leverage cutting-edge AI technology for intelligent PDF processing and automation";
-      case "optimize": return "Reduce file sizes and optimize PDFs for web, email, and efficient storage";
-      default: return "Professional PDF processing tools for all your document workflow needs";
+      case "convert": return "Convert PDFs to various formats and vice versa with high-quality results";
+      case "edit": return "Modify, enhance, and customize your PDF documents with advanced editing features";
+      case "organize": return "Merge, split, and organize your PDF files for better document management";
+      case "security": return "Protect and secure your PDF documents with password encryption and permissions";
+      case "ai": return "Leverage artificial intelligence for advanced PDF processing and automation";
+      case "optimize": return "Reduce file sizes and optimize PDFs for web, email, and storage";
+      default: return "Professional PDF processing tools for all your document needs";
     }
   };
 
   return (
-    <section className={`py-16 ${!filter ? 'bg-gradient-to-b from-background via-blue-50/30 to-background dark:via-blue-950/10' : ''}`} id="tools">
+    <section className={`py-12 ${!filter ? 'bg-gradient-to-b from-background via-primary/5 to-background' : ''}`} id="tools">
       <div className="container mx-auto px-4">
         {showTitle && (
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center mb-6">
-              <div className="flex items-center bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full px-6 py-3">
-                <Star className="w-5 h-5 text-yellow-500 mr-2" />
-                <span className="text-sm font-semibold text-primary">30+ Professional Tools Available</span>
-                <Sparkles className="w-5 h-5 text-purple-500 ml-2" />
-              </div>
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-4">
+              <Star className="w-6 h-6 text-yellow-500 mr-2" />
+              <span className="text-sm font-medium text-primary">30+ Professional Tools</span>
+              <Star className="w-6 h-6 text-yellow-500 ml-2" />
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
               {getSectionTitle()}
             </h2>
-            <p className="text-muted-foreground max-w-4xl mx-auto text-xl leading-relaxed mb-8">
+            <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
               {getSectionDescription()}
             </p>
-            
-            {/* Popular tools indicator */}
-            <div className="flex items-center justify-center mb-8">
-              <div className="flex items-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Most popular tools highlighted</span>
-              </div>
-            </div>
           </div>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-8xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {filteredTools.map((tool) => (
             <ToolCard
               key={tool.id}
@@ -364,33 +374,12 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
         </div>
         
         {!filter && (
-          <div className="text-center mt-16">
-            <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl shadow-lg">
-              <Zap className="w-6 h-6 text-blue-500 mr-3" />
-              <span className="text-lg font-medium text-gray-800 dark:text-gray-200">
-                Advanced PDF Processing • Lightning Fast • Bank-Level Security
+          <div className="text-center mt-12">
+            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-full">
+              <Zap className="w-5 h-5 text-purple-400 mr-2" />
+              <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                Advanced PDF processing • Client-side & Server-side tools • Secure & Fast
               </span>
-            </div>
-            
-            {/* Additional SEO content */}
-            <div className="mt-12 max-w-4xl mx-auto text-left">
-              <h3 className="text-2xl font-bold text-center mb-8 text-gray-900 dark:text-gray-100">
-                Why Choose Our PDF Tools?
-              </h3>
-              <div className="grid md:grid-cols-2 gap-8 text-gray-700 dark:text-gray-300">
-                <div>
-                  <h4 className="font-semibold text-lg mb-3 text-gray-900 dark:text-gray-100">Professional Quality</h4>
-                  <p className="leading-relaxed">
-                    Our PDF tools maintain the highest quality standards, preserving document integrity, formatting, and metadata across all conversions and edits.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-3 text-gray-900 dark:text-gray-100">Enterprise Security</h4>
-                  <p className="leading-relaxed">
-                    All processing happens securely with SSL encryption. Your files are automatically deleted after processing, ensuring complete privacy and data protection.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         )}
