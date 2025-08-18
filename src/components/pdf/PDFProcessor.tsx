@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { FileUploader } from './FileUploader';
@@ -8,7 +7,8 @@ import { PDFEngine } from './PDFEngine';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Download, ArrowLeft, RefreshCw, Upload } from 'lucide-react';
+import { Download, ArrowLeft, RefreshCw, Upload, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export type ProcessingTool = 
   | "view" 
@@ -31,6 +31,14 @@ export interface PDFProcessorProps {
   toolId?: string;
 }
 
+// Backend-required tools
+const BACKEND_TOOLS = [
+  "pdf-to-word", "pdf-to-excel", "pdf-to-jpg", "pdf-to-png", 
+  "word-to-pdf", "excel-to-pdf", "html-to-pdf", "protect-pdf", 
+  "unlock-pdf", "edit-pdf", "ocr-pdf", "translate-pdf", 
+  "summarize-pdf", "chat-pdf"
+];
+
 export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [processing, setProcessing] = useState(false);
@@ -40,12 +48,58 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
   const [results, setResults] = useState<{ name: string; url: string }[]>([]);
   const [options, setOptions] = useState<Record<string, any>>({});
 
+  const isBackendTool = toolId && BACKEND_TOOLS.includes(toolId);
+
   const processFiles = useCallback(async () => {
     if (files.length === 0) {
       toast.error('Please select files to process');
       return;
     }
 
+    // Handle backend tools
+    if (isBackendTool) {
+      setProcessing(true);
+      setCurrentStep('Connecting to server...');
+      setProgress(25);
+
+      try {
+        // TODO: Implement API call to your PHP backend
+        const formData = new FormData();
+        files.forEach((file, index) => {
+          formData.append(`file_${index}`, file);
+        });
+        formData.append('tool', toolId || '');
+        formData.append('options', JSON.stringify(options));
+
+        // This is where you'll integrate with your PHP backend
+        // const response = await fetch('/api/process-pdf', {
+        //   method: 'POST',
+        //   body: formData
+        // });
+
+        setCurrentStep('Processing on server...');
+        setProgress(75);
+
+        // Simulate server processing for now
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        setCurrentStep('Processing complete!');
+        setProgress(100);
+        
+        // For now, show a message that backend integration is needed
+        toast.success('Backend processing configured. Connect your PHP backend to complete processing.');
+        
+      } catch (error) {
+        console.error('Backend processing error:', error);
+        setError('Backend processing failed. Please check your server connection.');
+        toast.error('Backend processing failed');
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
+    // Handle client-side tools (existing logic)
     setProcessing(true);
     setProgress(0);
     setError('');
@@ -172,7 +226,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
     } finally {
       setProcessing(false);
     }
-  }, [files, tool, options, toolId]);
+  }, [files, tool, options, toolId, isBackendTool]);
 
   const downloadFile = (url: string, filename: string) => {
     const link = document.createElement('a');
@@ -221,6 +275,17 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
           </p>
         </div>
       </div>
+
+      {/* Backend Tool Notice */}
+      {isBackendTool && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            This tool requires server-side processing for optimal performance and quality. 
+            Large files and complex operations are handled by your PHP backend.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Upload Section */}
       {results.length === 0 && (
@@ -320,7 +385,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
                 <Separator className="my-4" />
                 
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>Files are processed locally in your browser for maximum privacy and security.</p>
+                  <p>Files are processed {isBackendTool ? 'securely on our servers' : 'locally in your browser'} for maximum {isBackendTool ? 'quality and performance' : 'privacy and security'}.</p>
                 </div>
               </CardContent>
             </Card>

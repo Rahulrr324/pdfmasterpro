@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react"
 
 type Theme = "dark" | "light" | "system"
@@ -14,7 +15,7 @@ type ThemeProviderState = {
 }
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "dark",
   setTheme: () => null,
 }
 
@@ -22,8 +23,8 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
-  storageKey = "pdf-tools-theme",
+  defaultTheme = "dark",
+  storageKey = "pdf-pro-suite-theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(

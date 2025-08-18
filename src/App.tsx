@@ -40,7 +40,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="pdf-tools-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="pdf-pro-suite-theme">
           <TooltipProvider delayDuration={300}>
             <Toaster />
             <Sonner />

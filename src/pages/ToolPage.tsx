@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
 const toolConfigs = {
+  // Client-side tools
   "merge-pdf": {
     title: "Merge PDF Files",
     description: "Combine multiple PDF documents into a single file",
@@ -32,16 +33,6 @@ const toolConfigs = {
     description: "Extract specific pages from PDF documents",
     tool: "extract" as const
   },
-  "protect-pdf": {
-    title: "Protect PDF",
-    description: "Add password protection to your PDF documents",
-    tool: "protect" as const
-  },
-  "unlock-pdf": {
-    title: "Unlock PDF",
-    description: "Remove password protection from PDF documents",
-    tool: "unlock" as const
-  },
   "watermark-pdf": {
     title: "Add Watermark",
     description: "Add text or image watermarks to PDFs",
@@ -52,16 +43,23 @@ const toolConfigs = {
     description: "Crop and resize PDF pages",
     tool: "crop" as const
   },
-  "edit-pdf": {
-    title: "Edit PDF",
-    description: "Add text, images, and annotations to PDFs",
-    tool: "edit" as const
-  },
   "view-pdf": {
     title: "View PDF",
     description: "Preview PDF documents with zoom and navigation",
     tool: "view" as const
   },
+  "pdf-to-text": {
+    title: "PDF to Text",
+    description: "Extract text content from PDF documents",
+    tool: "convert" as const
+  },
+  "image-to-pdf": {
+    title: "Image to PDF",
+    description: "Convert JPG, PNG images to PDF documents",
+    tool: "convert" as const
+  },
+
+  // Backend-powered tools (will work with your PHP backend)
   "pdf-to-word": {
     title: "PDF to Word",
     description: "Convert PDF documents to editable Word format",
@@ -82,11 +80,6 @@ const toolConfigs = {
     description: "Convert PDF pages to PNG image format",
     tool: "convert" as const
   },
-  "pdf-to-text": {
-    title: "PDF to Text",
-    description: "Extract text content from PDF documents",
-    tool: "convert" as const
-  },
   "word-to-pdf": {
     title: "Word to PDF",
     description: "Convert Word documents to PDF format",
@@ -97,14 +90,46 @@ const toolConfigs = {
     description: "Convert Excel spreadsheets to PDF format",
     tool: "convert" as const
   },
-  "image-to-pdf": {
-    title: "Image to PDF",
-    description: "Convert JPG, PNG images to PDF documents",
-    tool: "convert" as const
-  },
   "html-to-pdf": {
     title: "HTML to PDF",
     description: "Convert web pages and HTML to PDF",
+    tool: "convert" as const
+  },
+  "protect-pdf": {
+    title: "Protect PDF",
+    description: "Add password protection to your PDF documents",
+    tool: "protect" as const
+  },
+  "unlock-pdf": {
+    title: "Unlock PDF",
+    description: "Remove password protection from PDF documents",
+    tool: "unlock" as const
+  },
+  "edit-pdf": {
+    title: "Edit PDF",
+    description: "Add text, images, and annotations to PDFs",
+    tool: "edit" as const
+  },
+
+  // AI-powered tools
+  "ocr-pdf": {
+    title: "OCR PDF Scanner",
+    description: "Convert scanned PDFs to searchable text",
+    tool: "convert" as const
+  },
+  "translate-pdf": {
+    title: "Translate PDF",
+    description: "Translate PDF documents to different languages",
+    tool: "convert" as const
+  },
+  "summarize-pdf": {
+    title: "AI PDF Summarizer",
+    description: "Generate intelligent summaries of PDF documents",
+    tool: "convert" as const
+  },
+  "chat-pdf": {
+    title: "Chat with PDF",
+    description: "Ask questions and get answers from your PDFs",
     tool: "convert" as const
   }
 };
