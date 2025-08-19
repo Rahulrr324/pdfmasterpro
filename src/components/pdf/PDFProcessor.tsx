@@ -30,7 +30,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [toolId]);
 
-  const handleFilesSelected = useCallback((selectedFiles: File[]) => {
+  const handleFilesChange = useCallback((selectedFiles: File[]) => {
     setFiles(selectedFiles);
     setProcessedFile(null);
     setError(null);
@@ -161,23 +161,11 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
           </CardHeader>
           <CardContent>
             <FileUploader 
-              onFilesSelected={handleFilesSelected}
-              maxFiles={toolId === 'merge-pdf' ? 10 : 1}
+              files={files}
+              onFilesChange={handleFilesChange}
+              allowMultiple={toolId === 'merge-pdf'}
               acceptedTypes=".pdf"
             />
-            
-            {files.length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-medium mb-2">Selected Files:</h3>
-                <ul className="space-y-1">
-                  {files.map((file, index) => (
-                    <li key={index} className="text-sm text-muted-foreground">
-                      {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
             <PDFToolOptions 
               tool={tool}
