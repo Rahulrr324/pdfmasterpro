@@ -163,7 +163,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             <FileUploader 
               onFilesSelected={handleFilesSelected}
               maxFiles={toolId === 'merge-pdf' ? 10 : 1}
-              acceptedTypes={['.pdf']}
+              acceptedTypes=".pdf"
             />
             
             {files.length > 0 && (
