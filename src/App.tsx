@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
+import AuthPage from "./pages/AuthPage";
 import ToolPage from "./pages/ToolPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import CategoryPage from "./pages/CategoryPage";
@@ -39,19 +40,29 @@ if ('serviceWorker' in navigator) {
 const App: React.FC = () => {
   // Scroll to top on route changes
   React.useEffect(() => {
-    window.scrollTo(0, 0);
+    const handleRouteChange = () => {
+      window.scrollTo(0, 0);
+    };
+
+    // Listen for navigation events
+    window.addEventListener('popstate', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
   }, []);
 
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="pdf-pro-suite-theme">
+        <ThemeProvider defaultTheme="light" storageKey="arcpdf-theme">
           <TooltipProvider delayDuration={300}>
             <Toaster />
             <Sonner />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<AuthPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/category/:categoryId" element={<CategoryPage />} />
                 <Route path="/tool/:toolId" element={<ToolPage />} />

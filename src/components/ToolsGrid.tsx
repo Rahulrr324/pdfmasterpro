@@ -1,389 +1,131 @@
 
 import { useNavigate } from "react-router-dom";
-import { ToolCard } from "./ToolCard";
-import { 
-  FileText, 
-  Scissors, 
-  RotateCcw, 
-  Archive, 
-  Shield, 
-  Eye,
-  FileImage,
-  FileSpreadsheet,
-  Download,
-  Crop,
-  Edit3,
-  Layers,
-  Lock,
-  Unlock,
-  FileUp,
-  FileDown,
-  Image,
-  Type,
-  FilePlus,
-  Zap,
-  Settings,
-  Star,
-  Globe
+import { ProfessionalToolCard } from "@/components/ProfessionalToolCard";
+import {
+  FileText, Download, Upload, Merge, Scissors, 
+  Minimize, RotateCw, Shield, Unlock, Eye,
+  Image, FileImage, FileSpreadsheet, 
+  Crop, Edit, Droplet, MessageSquare, Search
 } from "lucide-react";
-import { 
-  MergePDFIcon, 
-  SplitPDFIcon, 
-  CompressPDFIcon, 
-  ConvertPDFIcon, 
-  SecurityPDFIcon, 
-  EditPDFIcon, 
-  RotatePDFIcon,
-  WatermarkPDFIcon,
-  ExtractPDFIcon,
-  CropPDFIcon,
-  ViewPDFIcon,
-  ImageConvertIcon,
-  WordDocIcon,
-  ExcelDocIcon,
-  HTMLDocIcon,
-  TextExtractIcon,
-  PasswordIcon,
-  UnlockIcon
-} from "./icons/professional-tool-icons";
 
-const tools = [
-  // Client-side tools (fully functional in browser)
-  {
-    id: "merge-pdf",
-    title: "Merge PDF Files",
-    description: "Combine multiple PDF documents into a single file instantly",
-    icon: MergePDFIcon,
-    category: "organize" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "split-pdf", 
-    title: "Split PDF Pages",
-    description: "Extract specific pages or split PDF into multiple documents",
-    icon: SplitPDFIcon,
-    category: "organize" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "rotate-pdf",
-    title: "Rotate PDF Pages", 
-    description: "Rotate PDF pages 90, 180, or 270 degrees permanently",
-    icon: RotatePDFIcon,
-    category: "edit" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "crop-pdf",
-    title: "Crop PDF Pages", 
-    description: "Trim and resize PDF pages to custom dimensions",
-    icon: CropPDFIcon,
-    category: "edit" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "extract-pages",
-    title: "Extract PDF Pages",
-    description: "Extract and save specific pages from PDF documents",
-    icon: ExtractPDFIcon,
-    category: "organize" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "view-pdf",
-    title: "View PDF Online",
-    description: "Preview and view PDF documents with zoom and navigation",
-    icon: ViewPDFIcon,
-    category: "edit" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "watermark-pdf",
-    title: "Add PDF Watermark",
-    description: "Insert text or image watermarks into PDF documents",
-    icon: WatermarkPDFIcon,
-    category: "edit" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "pdf-to-text",
-    title: "PDF to Text Extractor",
-    description: "Extract and copy text content from PDF documents",
-    icon: TextExtractIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "compress-pdf",
-    title: "Compress PDF Size",
-    description: "Reduce PDF file size while maintaining document quality",
-    icon: CompressPDFIcon,
-    category: "optimize" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-  {
-    id: "image-to-pdf",
-    title: "Image to PDF Converter",
-    description: "Convert JPG, PNG, and other images to PDF format",
-    icon: ImageConvertIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: true
-  },
-
-  // Backend-powered tools (require server processing)
-  {
-    id: "pdf-to-word",
-    title: "PDF to Word Converter",
-    description: "Convert PDF documents to editable Microsoft Word format",
-    icon: WordDocIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "pdf-to-excel",
-    title: "PDF to Excel Converter",
-    description: "Extract tables and data from PDF to Excel spreadsheets",
-    icon: ExcelDocIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "pdf-to-jpg",
-    title: "PDF to JPG Converter",
-    description: "Convert PDF pages to high-quality JPG image files",
-    icon: ImageConvertIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "pdf-to-png",
-    title: "PDF to PNG Converter",
-    description: "Transform PDF pages into PNG images with transparency",
-    icon: ImageConvertIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "word-to-pdf",
-    title: "Word to PDF Converter",
-    description: "Convert Microsoft Word documents to PDF format",
-    icon: WordDocIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "excel-to-pdf",
-    title: "Excel to PDF Converter", 
-    description: "Transform Excel spreadsheets into PDF documents",
-    icon: ExcelDocIcon,
-    category: "convert" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "html-to-pdf",
-    title: "HTML to PDF Converter",
-    description: "Convert web pages and HTML content to PDF format",
-    icon: HTMLDocIcon,
-    category: "convert" as const,
-    isNew: true,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "protect-pdf",
-    title: "Password Protect PDF",
-    description: "Add password security and encryption to PDF documents", 
-    icon: PasswordIcon,
-    category: "security" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "unlock-pdf",
-    title: "Remove PDF Password",
-    description: "Remove password protection from encrypted PDF files", 
-    icon: UnlockIcon,
-    category: "security" as const,
-    isNew: false,
-    isPremium: false,
-    isClientSide: false
-  },
-  {
-    id: "edit-pdf",
-    title: "Edit PDF Online",
-    description: "Add text, images, shapes, and annotations to PDF files",
-    icon: EditPDFIcon,
-    category: "edit" as const,
-    isNew: false,
-    iPremium: true,
-    isClientSide: false
-  },
-
-  // Advanced/Premium AI tools
-  {
-    id: "ocr-pdf",
-    title: "OCR PDF Scanner",
-    description: "Convert scanned PDFs to searchable and editable text",
-    icon: Eye,
-    category: "ai" as const,
-    isNew: true,
-    isPremium: true,
-    isClientSide: false
-  },
-  {
-    id: "translate-pdf",
-    title: "Translate PDF",
-    description: "Translate PDF documents to different languages using AI",
-    icon: Globe,
-    category: "ai" as const,
-    isNew: true,
-    isPremium: true,
-    isClientSide: false
-  },
-  {
-    id: "summarize-pdf",
-    title: "AI PDF Summarizer",
-    description: "Generate intelligent summaries of your PDF documents",
-    icon: Star,
-    category: "ai" as const,
-    isNew: true,
-    isPremium: true,
-    isClientSide: false
-  },
-  {
-    id: "chat-pdf",
-    title: "Chat with PDF",
-    description: "Ask questions and get answers from your PDF documents",
-    icon: Settings,
-    category: "ai" as const,
-    isNew: true,
-    isPremium: true,
-    isClientSide: false
-  }
-];
-
-interface ToolsGridProps {
-  filter?: "convert" | "edit" | "organize" | "security" | "ai" | "optimize";
-  showTitle?: boolean;
-}
-
-export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
+export const ToolsGrid = () => {
   const navigate = useNavigate();
 
-  const handleToolClick = (toolId: string) => {
-    navigate(`/tool/${toolId}`);
-  };
+  const tools = [
+    {
+      title: "Merge PDF",
+      description: "Combine multiple PDF files into a single document with custom page ordering",
+      icon: Merge,
+      gradient: "bg-gradient-to-br from-blue-500 to-blue-700",
+      href: "/tool/merge-pdf"
+    },
+    {
+      title: "Split PDF", 
+      description: "Extract specific pages or split PDF into multiple smaller documents",
+      icon: Scissors,
+      gradient: "bg-gradient-to-br from-green-500 to-green-700",
+      href: "/tool/split-pdf"
+    },
+    {
+      title: "Compress PDF",
+      description: "Reduce file size while maintaining quality for easier sharing and storage",
+      icon: Minimize,
+      gradient: "bg-gradient-to-br from-orange-500 to-orange-700", 
+      href: "/tool/compress-pdf"
+    },
+    {
+      title: "PDF to Word",
+      description: "Convert PDF documents to editable Word format with preserved formatting",
+      icon: FileText,
+      gradient: "bg-gradient-to-br from-purple-500 to-purple-700",
+      href: "/tool/pdf-to-word"
+    },
+    {
+      title: "PDF to Excel",
+      description: "Extract tables and data from PDF to Excel spreadsheets accurately",
+      icon: FileSpreadsheet,
+      gradient: "bg-gradient-to-br from-emerald-500 to-emerald-700",
+      href: "/tool/pdf-to-excel"
+    },
+    {
+      title: "PDF to JPG",
+      description: "Convert PDF pages to high-quality JPG images with custom resolution",
+      icon: FileImage,
+      gradient: "bg-gradient-to-br from-pink-500 to-pink-700",
+      href: "/tool/pdf-to-jpg"
+    },
+    {
+      title: "Word to PDF",
+      description: "Convert Word documents to professional PDF format with layout preservation",
+      icon: Upload,
+      gradient: "bg-gradient-to-br from-indigo-500 to-indigo-700",
+      href: "/tool/word-to-pdf"
+    },
+    {
+      title: "Image to PDF",
+      description: "Create PDF documents from images with custom page layouts and compression",
+      icon: Image,
+      gradient: "bg-gradient-to-br from-cyan-500 to-cyan-700",
+      href: "/tool/image-to-pdf"
+    },
+    {
+      title: "Rotate PDF",
+      description: "Rotate PDF pages to correct orientation with batch processing support",
+      icon: RotateCw,
+      gradient: "bg-gradient-to-br from-yellow-500 to-yellow-700",
+      href: "/tool/rotate-pdf"
+    },
+    {
+      title: "Protect PDF",
+      description: "Add password protection and security settings to your PDF documents",
+      icon: Shield,
+      gradient: "bg-gradient-to-br from-red-500 to-red-700",
+      href: "/tool/protect-pdf"
+    },
+    {
+      title: "Unlock PDF",
+      description: "Remove password protection from PDF documents when authorized",
+      icon: Unlock,
+      gradient: "bg-gradient-to-br from-teal-500 to-teal-700",
+      href: "/tool/unlock-pdf"
+    },
+    {
+      title: "Edit PDF",
+      description: "Add text, images, and annotations to existing PDF documents",
+      icon: Edit,
+      gradient: "bg-gradient-to-br from-violet-500 to-violet-700",
+      href: "/tool/edit-pdf"
+    },
+  ];
 
-  const filteredTools = filter ? tools.filter(tool => {
-    if (filter === "ai") return tool.category === "ai";
-    if (filter === "optimize") return tool.category === "optimize";
-    return tool.category === filter;
-  }) : tools;
-
-  const getSectionTitle = () => {
-    if (!filter) return "Professional PDF Pro Suite";
-    switch (filter) {
-      case "convert": return "PDF Conversion Tools";
-      case "edit": return "PDF Editing Tools";
-      case "organize": return "PDF Organization Tools";
-      case "security": return "PDF Security Tools";
-      case "ai": return "AI-Powered PDF Tools";
-      case "optimize": return "PDF Optimization Tools";
-      default: return "Professional PDF Pro Suite";
-    }
-  };
-
-  const getSectionDescription = () => {
-    if (!filter) return "Transform, edit, organize, and secure your PDF documents with our comprehensive suite of professional tools powered by advanced technology";
-    switch (filter) {
-      case "convert": return "Convert PDFs to various formats and vice versa with high-quality results";
-      case "edit": return "Modify, enhance, and customize your PDF documents with advanced editing features";
-      case "organize": return "Merge, split, and organize your PDF files for better document management";
-      case "security": return "Protect and secure your PDF documents with password encryption and permissions";
-      case "ai": return "Leverage artificial intelligence for advanced PDF processing and automation";
-      case "optimize": return "Reduce file sizes and optimize PDFs for web, email, and storage";
-      default: return "Professional PDF processing tools for all your document needs";
-    }
+  const handleToolClick = (href: string) => {
+    navigate(href);
   };
 
   return (
-    <section className={`py-12 ${!filter ? 'bg-gradient-to-b from-background via-primary/5 to-background' : ''}`} id="tools">
-      <div className="container mx-auto px-4">
-        {showTitle && (
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center mb-4">
-              <Star className="w-6 h-6 text-yellow-500 mr-2" />
-              <span className="text-sm font-medium text-primary">30+ Professional Tools</span>
-              <Star className="w-6 h-6 text-yellow-500 ml-2" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              {getSectionTitle()}
-            </h2>
-            <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
-              {getSectionDescription()}
-            </p>
-          </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {filteredTools.map((tool) => (
-            <ToolCard
-              key={tool.id}
-              title={tool.title}
-              description={tool.description}
-              icon={tool.icon}
-              category={tool.category}
-              isNew={tool.isNew}
-              isPremium={tool.isPremium}
-              onClick={() => handleToolClick(tool.id)}
-            />
-          ))}
-        </div>
-        
-        {!filter && (
-          <div className="text-center mt-12">
-            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-full">
-              <Zap className="w-5 h-5 text-purple-400 mr-2" />
-              <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                Advanced PDF processing • Client-side & Server-side tools • Secure & Fast
-              </span>
-            </div>
-          </div>
-        )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Professional PDF Tools
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose from our comprehensive suite of PDF tools designed for professionals and individuals alike
+        </p>
       </div>
-    </section>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {tools.map((tool) => (
+          <ProfessionalToolCard
+            key={tool.title}
+            title={tool.title}
+            description={tool.description}
+            icon={tool.icon}
+            gradient={tool.gradient}
+            href={tool.href}
+            onClick={() => handleToolClick(tool.href)}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
