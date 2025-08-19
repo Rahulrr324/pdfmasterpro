@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { FileUploader } from './FileUploader';
 import { ProgressTracker } from './ProgressTracker';
@@ -50,11 +50,6 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
 
   const isBackendTool = toolId && BACKEND_TOOLS.includes(toolId);
 
-  // Scroll to top when component mounts
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   const processFiles = useCallback(async () => {
     if (files.length === 0) {
       toast.error('Please select files to process');
@@ -68,13 +63,19 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
       setProgress(25);
 
       try {
-        // TODO: Implement API call to your PHP backend or Supabase edge functions
+        // TODO: Implement API call to your PHP backend
         const formData = new FormData();
         files.forEach((file, index) => {
           formData.append(`file_${index}`, file);
         });
         formData.append('tool', toolId || '');
         formData.append('options', JSON.stringify(options));
+
+        // This is where you'll integrate with your PHP backend
+        // const response = await fetch('/api/process-pdf', {
+        //   method: 'POST',
+        //   body: formData
+        // });
 
         setCurrentStep('Processing on server...');
         setProgress(75);
@@ -85,13 +86,8 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
         setCurrentStep('Processing complete!');
         setProgress(100);
         
-        toast.success('Server-side processing completed successfully!');
-        
-        // Placeholder result for demo
-        setResults([{
-          name: `processed_${files[0].name}`,
-          url: '#coming-soon'
-        }]);
+        // For now, show a message that backend integration is needed
+        toast.success('Backend processing configured. Connect your PHP backend to complete processing.');
         
       } catch (error) {
         console.error('Backend processing error:', error);
@@ -233,11 +229,6 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
   }, [files, tool, options, toolId, isBackendTool]);
 
   const downloadFile = (url: string, filename: string) => {
-    if (url === '#coming-soon') {
-      toast.info('This feature is coming soon! Server-side processing will be available after backend integration.');
-      return;
-    }
-    
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
@@ -250,9 +241,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
     results.forEach(result => {
       downloadFile(result.url, result.name);
     });
-    if (results.every(r => r.url !== '#coming-soon')) {
-      toast.success('All files downloaded successfully');
-    }
+    toast.success('All files downloaded successfully');
   };
 
   const startNew = () => {
@@ -293,7 +282,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             This tool requires server-side processing for optimal performance and quality. 
-            Advanced features will be available after backend integration.
+            Large files and complex operations are handled by your PHP backend.
           </AlertDescription>
         </Alert>
       )}
@@ -333,7 +322,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
                 <Button 
                   onClick={processFiles}
                   size="lg"
-                  className="px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="px-8"
                   disabled={processing}
                 >
                   {processing ? 'Processing...' : 'Process Files'}
@@ -363,10 +352,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
                 <CardTitle className="flex items-center justify-between">
                   <span>Processing Complete</span>
                   <div className="flex gap-2">
-                    <Button 
-                      onClick={downloadAllFiles} 
-                      className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                    >
+                    <Button onClick={downloadAllFiles} className="flex items-center gap-2">
                       <Download className="w-4 h-4" />
                       Download All
                     </Button>
@@ -399,7 +385,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId
                 <Separator className="my-4" />
                 
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>Files are processed {isBackendTool ? 'with server-side integration for enhanced quality' : 'locally in your browser for maximum privacy and security'}.</p>
+                  <p>Files are processed {isBackendTool ? 'securely on our servers' : 'locally in your browser'} for maximum {isBackendTool ? 'quality and performance' : 'privacy and security'}.</p>
                 </div>
               </CardContent>
             </Card>

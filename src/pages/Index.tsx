@@ -2,7 +2,6 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ToolsGrid } from "@/components/ToolsGrid";
-import { FeaturesSection } from "@/components/FeaturesSection";
 import { Footer } from "@/components/Footer";
 import { SITE_CONFIG } from "@/lib/config";
 import { useEffect } from "react";
@@ -53,8 +52,8 @@ const Index = () => {
     updateMetaTag('twitter:image', `${window.location.origin}/og-image.jpg`);
     
     // Additional SEO tags
-    updateMetaTag('theme-color', '#8B5CF6');
-    updateMetaTag('msapplication-TileColor', '#8B5CF6');
+    updateMetaTag('theme-color', '#3B82F6');
+    updateMetaTag('msapplication-TileColor', '#3B82F6');
     
     // Language and locale
     updateMetaTag('', 'en_US', 'og:locale');
@@ -76,8 +75,8 @@ const Index = () => {
       },
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "reviewCount": "15000"
+        "ratingValue": "4.8",
+        "reviewCount": "10000"
       },
       "publisher": {
         "@type": "Organization",
@@ -118,7 +117,6 @@ const Index = () => {
         <section id="tools" className="py-8" aria-label="PDF Tools Collection">
           <ToolsGrid />
         </section>
-        <FeaturesSection />
       </main>
       <Footer />
     </div>

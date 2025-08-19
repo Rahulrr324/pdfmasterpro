@@ -2,12 +2,10 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Menu, User, LogIn } from "lucide-react";
+import { Moon, Sun, Menu } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
-import { TopToolsMenu } from "@/components/TopToolsMenu";
-import { AllToolsDropdown } from "@/components/AllToolsDropdown";
 
 export const Header = () => {
   const { setTheme, theme } = useTheme();
@@ -15,12 +13,26 @@ export const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogoClick = () => {
-    navigate('/');
+  const navigation = [
+    { name: "Convert", href: "/category/convert" },
+    { name: "Edit", href: "/category/edit" },
+    { name: "Organize", href: "/category/organize" },
+    { name: "Security", href: "/category/security" },
+    { name: "AI Tools", href: "/category/ai" },
+    { name: "Categories", href: "/categories" },
+  ];
+
+  const isActiveSection = (href: string) => {
+    return location.pathname === href;
   };
 
-  const handleAuthClick = () => {
-    navigate('/auth');
+  const handleNavClick = (href: string) => {
+    setIsOpen(false);
+    navigate(href);
+  };
+
+  const handleLogoClick = () => {
+    navigate('/');
   };
 
   return (
@@ -36,30 +48,32 @@ export const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <TopToolsMenu />
-            <AllToolsDropdown />
-          </div>
+          <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Main navigation">
+            {navigation.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => handleNavClick(item.href)}
+                className={`text-sm font-medium transition-colors hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded px-2 py-1 ${
+                  isActiveSection(item.href) 
+                    ? 'text-orange-600 font-semibold' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-current={isActiveSection(item.href) ? "page" : undefined}
+                aria-label={`Navigate to ${item.name} section`}
+              >
+                {item.name}
+              </button>
+            ))}
+          </nav>
 
-          {/* Right Side Actions */}
+          {/* Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-2">
-            {/* Auth Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAuthClick}
-              className="hidden sm:flex items-center gap-2 hover:bg-purple-50 hover:border-purple-200"
-            >
-              <LogIn className="h-4 w-4" />
-              Login
-            </Button>
-
-            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="hidden sm:flex hover:bg-purple-50"
+              className="hidden sm:flex"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
             >
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -72,49 +86,40 @@ export const Header = () => {
                   variant="ghost" 
                   size="icon" 
                   className="md:hidden"
+                  aria-label="Open navigation menu"
                 >
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
-                <div className="flex flex-col space-y-4 mt-6">
-                  <Button
-                    onClick={handleAuthClick}
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Login / Signup
-                  </Button>
-                  
-                  <div className="border-t pt-4">
-                    <h3 className="font-semibold mb-3">Quick Tools</h3>
-                    <div className="space-y-2">
-                      {["Merge PDF", "Compress PDF", "PDF to Word", "Split PDF"].map((tool) => (
-                        <Button
-                          key={tool}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            setIsOpen(false);
-                            navigate(`/tool/${tool.toLowerCase().replace(' ', '-')}`);
-                          }}
-                        >
-                          {tool}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-lg font-semibold">Menu</span>
                   <Button
                     variant="ghost"
+                    size="icon"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="w-full justify-start"
+                    aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
                   >
-                    {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
-                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                    <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                   </Button>
                 </div>
+                <nav className="flex flex-col space-y-4" role="navigation" aria-label="Mobile navigation">
+                  {navigation.map((item) => (
+                    <button
+                      key={item.name}
+                      onClick={() => handleNavClick(item.href)}
+                      className={`text-sm font-medium transition-colors text-left px-2 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                        isActiveSection(item.href)
+                          ? 'text-orange-600 font-semibold bg-orange-50 dark:bg-orange-900/20'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                      aria-current={isActiveSection(item.href) ? "page" : undefined}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </nav>
               </SheetContent>
             </Sheet>
           </div>
