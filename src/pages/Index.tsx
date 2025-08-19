@@ -2,6 +2,7 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ToolsGrid } from "@/components/ToolsGrid";
+import { FeaturesSection } from "@/components/FeaturesSection";
 import { Footer } from "@/components/Footer";
 import { SITE_CONFIG } from "@/lib/config";
 import { useEffect } from "react";
@@ -114,9 +115,10 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
-        <section id="tools" className="py-8" aria-label="PDF Tools Collection">
+        <section id="tools" className="py-0" aria-label="PDF Tools Collection">
           <ToolsGrid />
         </section>
+        <FeaturesSection />
       </main>
       <Footer />
     </div>

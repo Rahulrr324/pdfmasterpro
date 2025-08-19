@@ -1,9 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Zap, Github, Twitter, Linkedin, Facebook, Instagram } from "lucide-react";
+import { Shield, Zap } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
-import { ModernPDFLogo } from "@/components/icons/modern-pdf-logo";
+import { ArcPDFLogo } from "@/components/icons/arcpdf-logo";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -44,23 +44,6 @@ export const Footer = () => {
     }
   ];
 
-  const socialIcons = {
-    github: Github,
-    twitter: Twitter,
-    linkedin: Linkedin,
-    facebook: Facebook,
-    instagram: Instagram,
-  };
-
-  // Filter social links based on configuration
-  const visibleSocialLinks = Object.entries(SITE_CONFIG.social)
-    .filter(([_, config]) => config.show)
-    .map(([platform, config]) => ({
-      name: platform.charAt(0).toUpperCase() + platform.slice(1),
-      href: config.url,
-      icon: socialIcons[platform as keyof typeof socialIcons],
-    }));
-
   return (
     <footer className="bg-gray-50 border-t" role="contentinfo">
       <div className="container mx-auto px-4 py-12">
@@ -69,7 +52,7 @@ export const Footer = () => {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <ModernPDFLogo className="w-10 h-10" />
+              <ArcPDFLogo className="w-10 h-10" />
               <div className="flex flex-col">
                 <span className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
                   {SITE_CONFIG.brand.name}
@@ -90,23 +73,6 @@ export const Footer = () => {
                 <span>Lightning Fast</span>
               </div>
             </div>
-            {/* Social Links */}
-            {visibleSocialLinks.length > 0 && (
-              <div className="flex space-x-3">
-                {visibleSocialLinks.map((social) => (
-                  <a
-                    key={social.name}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-full bg-white hover:bg-blue-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    aria-label={`Follow us on ${social.name}`}
-                  >
-                    <social.icon className="h-4 w-4" />
-                  </a>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Tool Categories */}

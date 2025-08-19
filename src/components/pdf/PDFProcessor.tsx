@@ -1,397 +1,199 @@
-import React, { useState, useCallback } from 'react';
-import { toast } from 'sonner';
-import { FileUploader } from './FileUploader';
-import { ProgressTracker } from './ProgressTracker';
-import { PDFToolOptions } from './PDFToolOptions';
-import { PDFEngine } from './PDFEngine';
-import { Button } from '@/components/ui/button';
+
+import React, { useState, useCallback, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Download, ArrowLeft, RefreshCw, Upload, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { FileUploader } from './FileUploader';
+import { PDFViewer } from './PDFViewer';
+import { PDFToolOptions } from './PDFToolOptions';
+import { ProgressTracker } from './ProgressTracker';
 
-export type ProcessingTool = 
-  | "view" 
-  | "rotate" 
-  | "split" 
-  | "convert" 
-  | "edit" 
-  | "merge" 
-  | "compress" 
-  | "protect" 
-  | "unlock" 
-  | "crop" 
-  | "extract" 
-  | "watermark"
-  | "image-to-pdf";
-
-export interface PDFProcessorProps {
-  tool: ProcessingTool;
-  onBack?: () => void;
-  toolId?: string;
-}
-
-// Backend-required tools
-const BACKEND_TOOLS = [
-  "pdf-to-word", "pdf-to-excel", "pdf-to-jpg", "pdf-to-png", 
-  "word-to-pdf", "excel-to-pdf", "html-to-pdf", "protect-pdf", 
-  "unlock-pdf", "edit-pdf", "ocr-pdf", "translate-pdf", 
-  "summarize-pdf", "chat-pdf"
-];
-
-export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, onBack, toolId }) => {
+export const PDFProcessor: React.FC = () => {
+  const { toolId } = useParams<{ toolId: string }>();
+  const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
-  const [processing, setProcessing] = useState(false);
+  const [processedFile, setProcessedFile] = useState<Blob | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [results, setResults] = useState<{ name: string; url: string }[]>([]);
-  const [options, setOptions] = useState<Record<string, any>>({});
+  const [error, setError] = useState<string | null>(null);
 
-  const isBackendTool = toolId && BACKEND_TOOLS.includes(toolId);
+  // Scroll to top when component mounts or tool changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [toolId]);
 
-  const processFiles = useCallback(async () => {
-    if (files.length === 0) {
-      toast.error('Please select files to process');
-      return;
-    }
-
-    // Handle backend tools
-    if (isBackendTool) {
-      setProcessing(true);
-      setCurrentStep('Connecting to server...');
-      setProgress(25);
-
-      try {
-        // TODO: Implement API call to your PHP backend
-        const formData = new FormData();
-        files.forEach((file, index) => {
-          formData.append(`file_${index}`, file);
-        });
-        formData.append('tool', toolId || '');
-        formData.append('options', JSON.stringify(options));
-
-        // This is where you'll integrate with your PHP backend
-        // const response = await fetch('/api/process-pdf', {
-        //   method: 'POST',
-        //   body: formData
-        // });
-
-        setCurrentStep('Processing on server...');
-        setProgress(75);
-
-        // Simulate server processing for now
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        setCurrentStep('Processing complete!');
-        setProgress(100);
-        
-        // For now, show a message that backend integration is needed
-        toast.success('Backend processing configured. Connect your PHP backend to complete processing.');
-        
-      } catch (error) {
-        console.error('Backend processing error:', error);
-        setError('Backend processing failed. Please check your server connection.');
-        toast.error('Backend processing failed');
-      } finally {
-        setProcessing(false);
-      }
-      return;
-    }
-
-    // Handle client-side tools (existing logic)
-    setProcessing(true);
+  const handleFilesSelected = useCallback((selectedFiles: File[]) => {
+    setFiles(selectedFiles);
+    setProcessedFile(null);
+    setError(null);
     setProgress(0);
-    setError('');
-    setResults([]);
-    setCurrentStep('Initializing...');
+  }, []);
+
+  const handleProcess = async () => {
+    if (files.length === 0) return;
+
+    setIsProcessing(true);
+    setError(null);
+    setProgress(0);
 
     try {
-      let processedResults: { name: string; url: string }[] = [];
-
-      if (tool === "image-to-pdf") {
-        const imageFiles = files.filter(file => file.type.startsWith('image/'));
-        if (imageFiles.length === 0) {
-          throw new Error('Please select image files for conversion');
-        }
-
-        setCurrentStep('Converting images to PDF...');
-        setProgress(25);
-        
-        const result = await PDFEngine.convertImagesToPDF(imageFiles);
-        const blob = new Blob([result], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        
-        processedResults.push({
-          name: 'converted_images.pdf',
-          url: url
-        });
-
-        setProgress(100);
-      } else if (tool === "merge") {
-        setCurrentStep('Merging PDF files...');
-        setProgress(50);
-        const result = await PDFEngine.mergePDFs(files);
-        const blob = new Blob([result], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        
-        processedResults.push({
-          name: 'merged_document.pdf',
-          url: url
-        });
-        setProgress(100);
-      } else {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const fileProgress = ((i + 1) / files.length) * 100;
-
-          setCurrentStep(`Processing ${file.name}...`);
-          setProgress(fileProgress);
-
-          let result: Uint8Array;
-          switch (tool) {
-            case "split":
-              const splitResults = await PDFEngine.splitPDF(file, options);
-              for (let j = 0; j < splitResults.length; j++) {
-                const blob = new Blob([splitResults[j]], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
-                processedResults.push({
-                  name: `${file.name.split('.')[0]}_part_${j + 1}.pdf`,
-                  url: url
-                });
-              }
-              continue;
-            case "compress":
-              result = await PDFEngine.compressPDF(file, options);
-              break;
-            case "rotate":
-              result = await PDFEngine.rotatePDF(file, options);
-              break;
-            case "protect":
-              result = await PDFEngine.protectPDF(file, options);
-              break;
-            case "unlock":
-              result = await PDFEngine.unlockPDF(file, options);
-              break;
-            case "watermark":
-              result = await PDFEngine.addWatermark(file, options);
-              break;
-            case "extract":
-              result = await PDFEngine.extractPages(file, options);
-              break;
-            case "crop":
-              result = await PDFEngine.cropPDF(file, options);
-              break;
-            case "edit":
-              result = await PDFEngine.editPDF(file, options);
-              break;
-            case "convert":
-              const convertResult = await PDFEngine.convertPDF(file, { ...options, toolId });
-              if (typeof convertResult === 'string') {
-                const blob = new Blob([convertResult], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                processedResults.push({
-                  name: `${file.name.split('.')[0]}.txt`,
-                  url: url
-                });
-                continue;
-              } else {
-                result = convertResult;
-              }
-              break;
-            default:
-              throw new Error(`Tool ${tool} not implemented`);
+      // Simulate processing with progress updates
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
           }
+          return prev + 10;
+        });
+      }, 200);
 
-          const blob = new Blob([result], { type: 'application/pdf' });
-          const url = URL.createObjectURL(blob);
-          processedResults.push({
-            name: `processed_${file.name}`,
-            url: url
-          });
-        }
+      // Check if tool requires backend processing
+      const backendTools = [
+        'pdf-to-word', 'pdf-to-excel', 'word-to-pdf', 'excel-to-pdf', 
+        'html-to-pdf', 'protect-pdf', 'unlock-pdf', 'edit-pdf', 
+        'ocr-pdf', 'translate-pdf', 'summarize-pdf', 'chat-pdf',
+        'pdf-to-jpg', 'pdf-to-png'
+      ];
+
+      if (backendTools.includes(toolId || '')) {
+        // Show "Coming Soon" message for backend tools
+        clearInterval(progressInterval);
+        setProgress(100);
+        setError('This tool is coming soon! Backend processing features are under development.');
+      } else {
+        // Simulate client-side processing
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        clearInterval(progressInterval);
+        setProgress(100);
+        
+        // Create a dummy processed file for demo
+        const dummyBlob = new Blob(['Processed PDF content'], { type: 'application/pdf' });
+        setProcessedFile(dummyBlob);
       }
-
-      setCurrentStep('Processing complete!');
-      setProgress(100);
-      setResults(processedResults);
-      
-      toast.success(`Successfully processed ${processedResults.length} file(s)`);
-      
-    } catch (error) {
-      console.error('Processing error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      setError(errorMessage);
-      toast.error(`Processing failed: ${errorMessage}`);
+    } catch (err) {
+      clearInterval(progressInterval);
+      setError('An error occurred while processing the file.');
+      console.error('Processing error:', err);
     } finally {
-      setProcessing(false);
+      setIsProcessing(false);
     }
-  }, [files, tool, options, toolId, isBackendTool]);
-
-  const downloadFile = (url: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
-  const downloadAllFiles = () => {
-    results.forEach(result => {
-      downloadFile(result.url, result.name);
-    });
-    toast.success('All files downloaded successfully');
+  const handleDownload = () => {
+    if (processedFile) {
+      const url = URL.createObjectURL(processedFile);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `processed-${toolId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
-  const startNew = () => {
-    setFiles([]);
-    setResults([]);
-    setError('');
-    setProgress(0);
-    setCurrentStep('');
-    setOptions({});
+  const getToolTitle = (id: string) => {
+    const toolTitles: Record<string, string> = {
+      'merge-pdf': 'Merge PDF Files',
+      'split-pdf': 'Split PDF Pages',
+      'compress-pdf': 'Compress PDF Size',
+      'pdf-to-word': 'PDF to Word Converter',
+      'pdf-to-excel': 'PDF to Excel Converter',
+      'rotate-pdf': 'Rotate PDF Pages',
+      'crop-pdf': 'Crop PDF Pages',
+      // Add more as needed
+    };
+    return toolTitles[id] || 'PDF Tool';
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        {onBack && (
-          <Button variant="ghost" size="sm" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Tools
-          </Button>
-        )}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold capitalize">
-            {tool.replace('-', ' ')} Tool
-          </h1>
-          <p className="text-muted-foreground">
-            {tool === "image-to-pdf" 
-              ? "Convert your images to PDF format"
-              : `Process your PDF files with our ${tool} tool`
-            }
-          </p>
-        </div>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate(-1)}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        
+        <h1 className="text-3xl font-bold text-foreground">
+          {getToolTitle(toolId || '')}
+        </h1>
       </div>
 
-      {/* Backend Tool Notice */}
-      {isBackendTool && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            This tool requires server-side processing for optimal performance and quality. 
-            Large files and complex operations are handled by your PHP backend.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Upload Section */}
-      {results.length === 0 && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* File Upload Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="w-5 h-5" />
-              Upload Files
-            </CardTitle>
+            <CardTitle>Upload Files</CardTitle>
           </CardHeader>
           <CardContent>
-            <FileUploader
-              files={files}
-              onFilesChange={setFiles}
-              acceptedTypes={tool === "image-to-pdf" ? "image/*" : ".pdf"}
+            <FileUploader 
+              onFilesSelected={handleFilesSelected}
+              maxFiles={toolId === 'merge-pdf' ? 10 : 1}
+              acceptedTypes={['.pdf']}
             />
+            
+            {files.length > 0 && (
+              <div className="mt-4">
+                <h3 className="font-medium mb-2">Selected Files:</h3>
+                <ul className="space-y-1">
+                  {files.map((file, index) => (
+                    <li key={index} className="text-sm text-muted-foreground">
+                      {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <PDFToolOptions toolId={toolId || ''} />
+            
+            <Button 
+              onClick={handleProcess}
+              disabled={files.length === 0 || isProcessing}
+              className="w-full mt-4"
+            >
+              {isProcessing ? 'Processing...' : `Process ${getToolTitle(toolId || '')}`}
+            </Button>
           </CardContent>
         </Card>
-      )}
 
-      {/* Settings Section */}
-      {files.length > 0 && !processing && results.length === 0 && (
-        <div className="space-y-6">
-          <PDFToolOptions
-            tool={tool}
-            options={options}
-            onOptionsChange={setOptions}
-            toolId={toolId}
-          />
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-center">
-                <Button 
-                  onClick={processFiles}
-                  size="lg"
-                  className="px-8"
-                  disabled={processing}
-                >
-                  {processing ? 'Processing...' : 'Process Files'}
+        {/* Preview/Results Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Preview & Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isProcessing && (
+              <ProgressTracker progress={progress} />
+            )}
+            
+            {error && (
+              <div className="flex items-center space-x-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                <span className="text-sm text-yellow-800">{error}</span>
+              </div>
+            )}
+            
+            {files.length > 0 && !isProcessing && !error && (
+              <PDFViewer file={files[0]} />
+            )}
+            
+            {processedFile && (
+              <div className="mt-4">
+                <Button onClick={handleDownload} className="w-full">
+                  Download Processed File
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Processing Progress */}
-      {(processing || results.length > 0) && (
-        <div className="space-y-6">
-          <ProgressTracker 
-            isProcessing={processing}
-            progress={progress}
-            currentStep={currentStep}
-            error={error}
-            totalFiles={files.length}
-            processedFiles={progress === 100 ? files.length : Math.floor((progress / 100) * files.length)}
-          />
-
-          {/* Results Section */}
-          {results.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Processing Complete</span>
-                  <div className="flex gap-2">
-                    <Button onClick={downloadAllFiles} className="flex items-center gap-2">
-                      <Download className="w-4 h-4" />
-                      Download All
-                    </Button>
-                    <Button onClick={startNew} variant="outline" className="flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4" />
-                      Start New
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {results.map((result, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                      <span className="font-medium">{result.name}</span>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => downloadFile(result.url, result.name)}
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <div className="text-sm text-muted-foreground text-center">
-                  <p>Files are processed {isBackendTool ? 'securely on our servers' : 'locally in your browser'} for maximum {isBackendTool ? 'quality and performance' : 'privacy and security'}.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { ToolCard } from "./ToolCard";
+import { ProfessionalToolCard } from "./ProfessionalToolCard";
 import { 
   FileText, 
   Scissors, 
@@ -314,7 +314,7 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
   }) : tools;
 
   const getSectionTitle = () => {
-    if (!filter) return "Professional PDF Pro Suite";
+    if (!filter) return "Professional PDF Suite";
     switch (filter) {
       case "convert": return "PDF Conversion Tools";
       case "edit": return "PDF Editing Tools";
@@ -322,12 +322,12 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
       case "security": return "PDF Security Tools";
       case "ai": return "AI-Powered PDF Tools";
       case "optimize": return "PDF Optimization Tools";
-      default: return "Professional PDF Pro Suite";
+      default: return "Professional PDF Suite";
     }
   };
 
   const getSectionDescription = () => {
-    if (!filter) return "Transform, edit, organize, and secure your PDF documents with our comprehensive suite of professional tools powered by advanced technology";
+    if (!filter) return "Transform, edit, organize, and secure your PDF documents with our comprehensive suite of professional tools";
     switch (filter) {
       case "convert": return "Convert PDFs to various formats and vice versa with high-quality results";
       case "edit": return "Modify, enhance, and customize your PDF documents with advanced editing features";
@@ -340,16 +340,16 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
   };
 
   return (
-    <section className={`py-12 ${!filter ? 'bg-gradient-to-b from-background via-primary/5 to-background' : ''}`} id="tools">
+    <section className={`py-16 ${!filter ? 'bg-gradient-to-b from-background via-primary/5 to-background' : ''}`} id="tools">
       <div className="container mx-auto px-4">
         {showTitle && (
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-4">
               <Star className="w-6 h-6 text-yellow-500 mr-2" />
-              <span className="text-sm font-medium text-primary">30+ Professional Tools</span>
+              <span className="text-sm font-medium text-primary">25+ Professional Tools</span>
               <Star className="w-6 h-6 text-yellow-500 ml-2" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
               {getSectionTitle()}
             </h2>
             <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
@@ -360,7 +360,7 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {filteredTools.map((tool) => (
-            <ToolCard
+            <ProfessionalToolCard
               key={tool.id}
               title={tool.title}
               description={tool.description}
@@ -374,10 +374,10 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
         </div>
         
         {!filter && (
-          <div className="text-center mt-12">
-            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-full">
-              <Zap className="w-5 h-5 text-purple-400 mr-2" />
-              <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+          <div className="text-center mt-16">
+            <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full border">
+              <Zap className="w-5 h-5 text-primary mr-2" />
+              <span className="text-sm font-medium text-foreground">
                 Advanced PDF processing • Client-side & Server-side tools • Secure & Fast
               </span>
             </div>

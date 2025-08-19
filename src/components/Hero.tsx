@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { FileText, ArrowRight, Shield, Zap, Users } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
 
@@ -15,18 +14,9 @@ export const Hero = () => {
   };
 
   return (
-    <section className="relative py-12 lg:py-16 overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" />
-      
+    <section className="relative py-16 lg:py-20 overflow-hidden bg-gradient-to-br from-blue-50/50 via-purple-50/50 to-pink-50/50">
       <div className="container mx-auto px-4 relative">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Trust badge */}
-          <Badge variant="secondary" className="mb-6 bg-white/80 backdrop-blur-sm text-blue-700 border-blue-200 hover:bg-white/90 transition-colors">
-            <Shield className="w-3 h-3 mr-1" />
-            Trusted by 10M+ users worldwide
-          </Badge>
-
           {/* Main heading */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Every PDF tool you'll
@@ -36,12 +26,12 @@ export const Hero = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
             Convert, edit, and e-sign PDF files with our complete set of PDF tools
           </p>
 
           {/* CTA Button */}
-          <div className="flex justify-center mb-12">
+          <div className="flex justify-center mb-16">
             <Button 
               size="lg" 
               onClick={scrollToTools} 
