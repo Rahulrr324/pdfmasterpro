@@ -4,6 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from "lucide-react";
 import React from "react";
+import {
+  PDFToWordIcon,
+  PDFToExcelIcon, 
+  PDFToImageIcon,
+  EditPDFIcon,
+  RotatePDFIcon,
+  MergePDFIcon,
+  SplitPDFIcon,
+  ProtectPDFIcon,
+  CompressPDFIcon,
+  OCRPDFIcon
+} from "@/components/icons/colorful-tool-icons";
 
 interface ProfessionalToolCardProps {
   title: string;
@@ -13,6 +25,7 @@ interface ProfessionalToolCardProps {
   isNew?: boolean;
   isPremium?: boolean;
   onClick?: () => void;
+  toolId?: string;
 }
 
 const categoryColors = {
@@ -33,13 +46,26 @@ const categoryLabels = {
   optimize: "Optimize"
 };
 
-const categoryIconColors = {
-  convert: "text-blue-600",
-  edit: "text-green-600", 
-  organize: "text-purple-600",
-  security: "text-red-600",
-  ai: "text-orange-600",
-  optimize: "text-teal-600"
+const getToolIcon = (toolId?: string) => {
+  switch (toolId) {
+    case "pdf-to-word": return PDFToWordIcon;
+    case "pdf-to-excel": return PDFToExcelIcon;
+    case "pdf-to-jpg":
+    case "pdf-to-png": 
+    case "image-to-pdf": return PDFToImageIcon;
+    case "edit-pdf": return EditPDFIcon;
+    case "rotate-pdf": return RotatePDFIcon;
+    case "merge-pdf": return MergePDFIcon;
+    case "split-pdf": return SplitPDFIcon;
+    case "protect-pdf":
+    case "unlock-pdf": return ProtectPDFIcon;
+    case "compress-pdf": return CompressPDFIcon;
+    case "ocr-pdf":
+    case "translate-pdf":
+    case "summarize-pdf":
+    case "chat-pdf": return OCRPDFIcon;
+    default: return null;
+  }
 };
 
 export const ProfessionalToolCard = ({ 
@@ -49,8 +75,12 @@ export const ProfessionalToolCard = ({
   category, 
   isNew, 
   isPremium,
-  onClick 
+  onClick,
+  toolId
 }: ProfessionalToolCardProps) => {
+  const ColorfulIcon = getToolIcon(toolId);
+  const DisplayIcon = ColorfulIcon || Icon;
+
   return (
     <Card 
       className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-2 hover:border-primary/20 bg-white overflow-hidden" 
@@ -68,7 +98,7 @@ export const ProfessionalToolCard = ({
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className={`w-14 h-14 rounded-xl flex items-center justify-center bg-gradient-to-br ${categoryColors[category]} border`}>
-            <Icon className={`w-7 h-7 ${categoryIconColors[category]}`} aria-hidden="true" />
+            <DisplayIcon className={`w-7 h-7 ${ColorfulIcon ? '' : 'text-primary'}`} aria-hidden="true" />
           </div>
           <div className="flex gap-2">
             {isNew && (

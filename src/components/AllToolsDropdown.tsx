@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown, FileText, Edit3, FolderOpen, Shield, Zap, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const categories = [
   {
@@ -16,9 +17,12 @@ const categories = [
       { id: "pdf-to-word", title: "PDF to Word" },
       { id: "pdf-to-excel", title: "PDF to Excel" },
       { id: "pdf-to-jpg", title: "PDF to JPG" },
+      { id: "pdf-to-png", title: "PDF to PNG" },
       { id: "word-to-pdf", title: "Word to PDF" },
       { id: "excel-to-pdf", title: "Excel to PDF" },
+      { id: "html-to-pdf", title: "HTML to PDF" },
       { id: "image-to-pdf", title: "Image to PDF" },
+      { id: "pdf-to-text", title: "PDF to Text" },
     ]
   },
   {
@@ -70,27 +74,40 @@ const categories = [
 
 export const AllToolsDropdown = () => {
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleToolClick = (toolId: string) => {
     navigate(`/tool/${toolId}`);
+    setIsOpen(false);
   };
 
   const handleCategoryClick = (categoryTitle: string) => {
     navigate(`/category/${categoryTitle.toLowerCase()}`);
+    setIsOpen(false);
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className="font-medium hover:text-primary hover:bg-primary/10 transition-colors"
+        <div
+          onMouseEnter={() => setIsOpen(true)}
+          onMouseLeave={() => setIsOpen(false)}
         >
-          All Tools
-          <ChevronDown className="ml-1 h-4 w-4" />
-        </Button>
+          <Button 
+            variant="ghost" 
+            className="font-medium hover:text-primary hover:bg-primary/10 transition-colors"
+          >
+            All Tools
+            <ChevronDown className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[800px] p-6 bg-white border shadow-xl" align="start">
+      <DropdownMenuContent 
+        className="w-[800px] p-6 bg-white dark:bg-gray-900 border shadow-xl z-50" 
+        align="start"
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+      >
         <div className="grid grid-cols-3 gap-6">
           {categories.map((category) => (
             <div key={category.title} className="space-y-3">
