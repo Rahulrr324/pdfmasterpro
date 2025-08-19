@@ -9,14 +9,21 @@ import { PDFViewer } from './PDFViewer';
 import { PDFToolOptions } from './PDFToolOptions';
 import { ProgressTracker } from './ProgressTracker';
 
-export const PDFProcessor: React.FC = () => {
-  const { toolId } = useParams<{ toolId: string }>();
+export type ProcessingTool = 'merge' | 'split' | 'rotate' | 'compress' | 'extract' | 'watermark' | 'crop' | 'view' | 'convert' | 'protect' | 'unlock' | 'edit';
+
+interface PDFProcessorProps {
+  tool: ProcessingTool;
+  toolId?: string;
+}
+
+export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
   const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
   const [processedFile, setProcessedFile] = useState<Blob | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [options, setOptions] = useState<Record<string, any>>({});
 
   // Scroll to top when component mounts or tool changes
   useEffect(() => {
@@ -30,6 +37,10 @@ export const PDFProcessor: React.FC = () => {
     setProgress(0);
   }, []);
 
+  const handleOptionsChange = useCallback((newOptions: Record<string, any>) => {
+    setOptions(newOptions);
+  }, []);
+
   const handleProcess = async () => {
     if (files.length === 0) return;
 
@@ -38,8 +49,10 @@ export const PDFProcessor: React.FC = () => {
     setProgress(0);
 
     try {
+      let progressInterval: NodeJS.Timeout;
+      
       // Simulate processing with progress updates
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 90) {
             clearInterval(progressInterval);
@@ -57,7 +70,7 @@ export const PDFProcessor: React.FC = () => {
         'pdf-to-jpg', 'pdf-to-png'
       ];
 
-      if (backendTools.includes(toolId || '')) {
+      if (toolId && backendTools.includes(toolId)) {
         // Show "Coming Soon" message for backend tools
         clearInterval(progressInterval);
         setProgress(100);
@@ -73,7 +86,6 @@ export const PDFProcessor: React.FC = () => {
         setProcessedFile(dummyBlob);
       }
     } catch (err) {
-      clearInterval(progressInterval);
       setError('An error occurred while processing the file.');
       console.error('Processing error:', err);
     } finally {
@@ -86,7 +98,7 @@ export const PDFProcessor: React.FC = () => {
       const url = URL.createObjectURL(processedFile);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `processed-${toolId}.pdf`;
+      a.download = `processed-${toolId || 'file'}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -103,7 +115,23 @@ export const PDFProcessor: React.FC = () => {
       'pdf-to-excel': 'PDF to Excel Converter',
       'rotate-pdf': 'Rotate PDF Pages',
       'crop-pdf': 'Crop PDF Pages',
-      // Add more as needed
+      'watermark-pdf': 'Add Watermark',
+      'extract-pages': 'Extract Pages',
+      'protect-pdf': 'Protect PDF',
+      'unlock-pdf': 'Unlock PDF',
+      'edit-pdf': 'Edit PDF',
+      'view-pdf': 'View PDF',
+      'pdf-to-text': 'PDF to Text',
+      'image-to-pdf': 'Image to PDF',
+      'pdf-to-jpg': 'PDF to JPG',
+      'pdf-to-png': 'PDF to PNG',
+      'word-to-pdf': 'Word to PDF',
+      'excel-to-pdf': 'Excel to PDF',
+      'html-to-pdf': 'HTML to PDF',
+      'ocr-pdf': 'OCR PDF Scanner',
+      'translate-pdf': 'Translate PDF',
+      'summarize-pdf': 'AI PDF Summarizer',
+      'chat-pdf': 'Chat with PDF'
     };
     return toolTitles[id] || 'PDF Tool';
   };
@@ -151,7 +179,12 @@ export const PDFProcessor: React.FC = () => {
               </div>
             )}
 
-            <PDFToolOptions toolId={toolId || ''} />
+            <PDFToolOptions 
+              tool={tool}
+              options={options}
+              onOptionsChange={handleOptionsChange}
+              toolId={toolId}
+            />
             
             <Button 
               onClick={handleProcess}
@@ -169,11 +202,15 @@ export const PDFProcessor: React.FC = () => {
             <CardTitle>Preview & Results</CardTitle>
           </CardHeader>
           <CardContent>
-            {isProcessing && (
-              <ProgressTracker progress={progress} />
+            {(isProcessing || progress > 0) && (
+              <ProgressTracker 
+                isProcessing={isProcessing}
+                progress={progress}
+                error={error}
+              />
             )}
             
-            {error && (
+            {error && !isProcessing && (
               <div className="flex items-center space-x-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <AlertTriangle className="w-5 h-5 text-yellow-600" />
                 <span className="text-sm text-yellow-800">{error}</span>
