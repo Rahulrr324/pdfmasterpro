@@ -1,99 +1,95 @@
 
-import { useState } from "react";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  FileText, Merge, Scissors, Minimize, RotateCw, 
+  Shield, Unlock, Edit, Upload, Image, FileImage, 
+  FileSpreadsheet
+} from "lucide-react";
 
 export const AllToolsDropdown = () => {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
 
-  const toolCategories = [
+  const categories = [
     {
-      title: "Convert from PDF",
+      name: "Convert",
       tools: [
-        { name: "PDF to Word", href: "/tool/pdf-to-word" },
-        { name: "PDF to Excel", href: "/tool/pdf-to-excel" },
-        { name: "PDF to JPG", href: "/tool/pdf-to-jpg" },
-        { name: "PDF to PNG", href: "/tool/pdf-to-png" },
-        { name: "PDF to Text", href: "/tool/pdf-to-text" },
+        { name: "PDF to Word", href: "/tool/pdf-to-word", icon: FileText },
+        { name: "PDF to Excel", href: "/tool/pdf-to-excel", icon: FileSpreadsheet },
+        { name: "PDF to JPG", href: "/tool/pdf-to-jpg", icon: FileImage },
+        { name: "Word to PDF", href: "/tool/word-to-pdf", icon: Upload },
+        { name: "Image to PDF", href: "/tool/image-to-pdf", icon: Image },
       ]
     },
     {
-      title: "Convert to PDF",
+      name: "Organize",
       tools: [
-        { name: "Word to PDF", href: "/tool/word-to-pdf" },
-        { name: "Excel to PDF", href: "/tool/excel-to-pdf" },
-        { name: "Image to PDF", href: "/tool/image-to-pdf" },
-        { name: "HTML to PDF", href: "/tool/html-to-pdf" },
+        { name: "Merge PDF", href: "/tool/merge-pdf", icon: Merge },
+        { name: "Split PDF", href: "/tool/split-pdf", icon: Scissors },
+        { name: "Rotate PDF", href: "/tool/rotate-pdf", icon: RotateCw },
       ]
     },
     {
-      title: "Edit & Organize",
+      name: "Optimize", 
       tools: [
-        { name: "Merge PDF", href: "/tool/merge-pdf" },
-        { name: "Split PDF", href: "/tool/split-pdf" },
-        { name: "Compress PDF", href: "/tool/compress-pdf" },
-        { name: "Rotate PDF", href: "/tool/rotate-pdf" },
-        { name: "Crop PDF", href: "/tool/crop-pdf" },
-        { name: "Extract Pages", href: "/tool/extract-pages" },
+        { name: "Compress PDF", href: "/tool/compress-pdf", icon: Minimize },
       ]
     },
     {
-      title: "Security & More",
+      name: "Security",
       tools: [
-        { name: "Protect PDF", href: "/tool/protect-pdf" },
-        { name: "Unlock PDF", href: "/tool/unlock-pdf" },
-        { name: "Watermark PDF", href: "/tool/watermark-pdf" },
-        { name: "Edit PDF", href: "/tool/edit-pdf" },
-        { name: "View PDF", href: "/tool/view-pdf" },
+        { name: "Protect PDF", href: "/tool/protect-pdf", icon: Shield },
+        { name: "Unlock PDF", href: "/tool/unlock-pdf", icon: Unlock },
+        { name: "Edit PDF", href: "/tool/edit-pdf", icon: Edit },
       ]
     }
   ];
 
-  const handleToolClick = (href: string) => {
-    setIsOpen(false);
-    navigate(href);
-  };
-
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className="flex items-center gap-1 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50"
-        >
-          All Tools
-          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[600px] p-6" align="start">
-        <div className="grid grid-cols-2 gap-8">
-          {toolCategories.map((category, index) => (
-            <div key={index} className="space-y-3">
-              <h3 className="font-semibold text-purple-700 text-sm">
-                {category.title}
-              </h3>
-              <div className="space-y-2">
-                {category.tools.map((tool) => (
-                  <button
-                    key={tool.name}
-                    onClick={() => handleToolClick(tool.href)}
-                    className="block w-full text-left text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors"
-                  >
-                    {tool.name}
-                  </button>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger className="bg-transparent hover:bg-purple-50 hover:text-purple-700 data-[active]:bg-purple-50 data-[state=open]:bg-purple-50">
+            <span className="font-medium">All Tools</span>
+            <ChevronDown className="ml-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="w-[800px] p-6 bg-white border border-gray-200 shadow-2xl rounded-lg">
+              <div className="grid grid-cols-4 gap-6">
+                {categories.map((category) => (
+                  <div key={category.name} className="space-y-3">
+                    <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide border-b border-gray-200 pb-2">
+                      {category.name}
+                    </h3>
+                    <div className="space-y-1">
+                      {category.tools.map((tool) => (
+                        <Button
+                          key={tool.name}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(tool.href)}
+                          className="w-full justify-start h-auto p-2 hover:bg-purple-50 hover:text-purple-700 text-left"
+                        >
+                          <tool.icon className="h-4 w-4 mr-2 text-gray-600" />
+                          <span className="text-sm">{tool.name}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 };

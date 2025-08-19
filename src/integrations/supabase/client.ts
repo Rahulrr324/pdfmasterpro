@@ -15,7 +15,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    // Set redirect URL based on environment
-    redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
   }
 });

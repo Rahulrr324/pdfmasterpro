@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { ProfessionalToolCard } from "@/components/ProfessionalToolCard";
+import { EnhancedToolCard } from "@/components/EnhancedToolCard";
 import {
   FileText, Download, Upload, Merge, Scissors, 
   Minimize, RotateCw, Shield, Unlock, Eye,
@@ -16,84 +16,84 @@ export const ToolsGrid = () => {
       title: "Merge PDF",
       description: "Combine multiple PDF files into a single document with custom page ordering",
       icon: Merge,
-      gradient: "bg-gradient-to-br from-blue-500 to-blue-700",
+      gradient: "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
       href: "/tool/merge-pdf"
     },
     {
       title: "Split PDF", 
       description: "Extract specific pages or split PDF into multiple smaller documents",
       icon: Scissors,
-      gradient: "bg-gradient-to-br from-green-500 to-green-700",
+      gradient: "bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700",
       href: "/tool/split-pdf"
     },
     {
       title: "Compress PDF",
       description: "Reduce file size while maintaining quality for easier sharing and storage",
       icon: Minimize,
-      gradient: "bg-gradient-to-br from-orange-500 to-orange-700", 
+      gradient: "bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700", 
       href: "/tool/compress-pdf"
     },
     {
       title: "PDF to Word",
       description: "Convert PDF documents to editable Word format with preserved formatting",
       icon: FileText,
-      gradient: "bg-gradient-to-br from-purple-500 to-purple-700",
+      gradient: "bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700",
       href: "/tool/pdf-to-word"
     },
     {
       title: "PDF to Excel",
       description: "Extract tables and data from PDF to Excel spreadsheets accurately",
       icon: FileSpreadsheet,
-      gradient: "bg-gradient-to-br from-emerald-500 to-emerald-700",
+      gradient: "bg-gradient-to-br from-green-500 via-green-600 to-green-700",
       href: "/tool/pdf-to-excel"
     },
     {
       title: "PDF to JPG",
       description: "Convert PDF pages to high-quality JPG images with custom resolution",
       icon: FileImage,
-      gradient: "bg-gradient-to-br from-pink-500 to-pink-700",
+      gradient: "bg-gradient-to-br from-pink-500 via-pink-600 to-pink-700",
       href: "/tool/pdf-to-jpg"
     },
     {
       title: "Word to PDF",
       description: "Convert Word documents to professional PDF format with layout preservation",
       icon: Upload,
-      gradient: "bg-gradient-to-br from-indigo-500 to-indigo-700",
+      gradient: "bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700",
       href: "/tool/word-to-pdf"
     },
     {
       title: "Image to PDF",
       description: "Create PDF documents from images with custom page layouts and compression",
       icon: Image,
-      gradient: "bg-gradient-to-br from-cyan-500 to-cyan-700",
+      gradient: "bg-gradient-to-br from-cyan-500 via-cyan-600 to-cyan-700",
       href: "/tool/image-to-pdf"
     },
     {
       title: "Rotate PDF",
       description: "Rotate PDF pages to correct orientation with batch processing support",
       icon: RotateCw,
-      gradient: "bg-gradient-to-br from-yellow-500 to-yellow-700",
+      gradient: "bg-gradient-to-br from-yellow-500 via-yellow-600 to-yellow-700",
       href: "/tool/rotate-pdf"
     },
     {
       title: "Protect PDF",
       description: "Add password protection and security settings to your PDF documents",
       icon: Shield,
-      gradient: "bg-gradient-to-br from-red-500 to-red-700",
+      gradient: "bg-gradient-to-br from-red-500 via-red-600 to-red-700",
       href: "/tool/protect-pdf"
     },
     {
       title: "Unlock PDF",
       description: "Remove password protection from PDF documents when authorized",
       icon: Unlock,
-      gradient: "bg-gradient-to-br from-teal-500 to-teal-700",
+      gradient: "bg-gradient-to-br from-teal-500 via-teal-600 to-teal-700",
       href: "/tool/unlock-pdf"
     },
     {
       title: "Edit PDF",
       description: "Add text, images, and annotations to existing PDF documents",
       icon: Edit,
-      gradient: "bg-gradient-to-br from-violet-500 to-violet-700",
+      gradient: "bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700",
       href: "/tool/edit-pdf"
     },
   ];
@@ -103,19 +103,20 @@ export const ToolsGrid = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+    <div className="container mx-auto px-4 py-12">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
           Professional PDF Tools
         </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose from our comprehensive suite of PDF tools designed for professionals and individuals alike
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          Choose from our comprehensive suite of PDF tools designed for professionals and individuals alike. 
+          Fast, secure, and reliable processing for all your document needs.
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {tools.map((tool) => (
-          <ProfessionalToolCard
+          <EnhancedToolCard
             key={tool.title}
             title={tool.title}
             description={tool.description}
