@@ -46,26 +46,15 @@ const categoryLabels = {
   optimize: "Optimize"
 };
 
-const getToolIcon = (toolId?: string) => {
-  switch (toolId) {
-    case "pdf-to-word": return PDFToWordIcon;
-    case "pdf-to-excel": return PDFToExcelIcon;
-    case "pdf-to-jpg":
-    case "pdf-to-png": 
-    case "image-to-pdf": return PDFToImageIcon;
-    case "edit-pdf": return EditPDFIcon;
-    case "rotate-pdf": return RotatePDFIcon;
-    case "merge-pdf": return MergePDFIcon;
-    case "split-pdf": return SplitPDFIcon;
-    case "protect-pdf":
-    case "unlock-pdf": return ProtectPDFIcon;
-    case "compress-pdf": return CompressPDFIcon;
-    case "ocr-pdf":
-    case "translate-pdf":
-    case "summarize-pdf":
-    case "chat-pdf": return OCRPDFIcon;
-    default: return null;
+const getProcessingBadge = (description: string) => {
+  if (description.includes('Client-side')) {
+    return <Badge className="bg-green-100 text-green-700 text-xs">Client-side</Badge>;
+  } else if (description.includes('Server-side')) {
+    return <Badge className="bg-blue-100 text-blue-700 text-xs">Server-side</Badge>;
+  } else if (description.includes('AI')) {
+    return <Badge className="bg-purple-100 text-purple-700 text-xs">AI-Powered</Badge>;
   }
+  return null;
 };
 
 export const ProfessionalToolCard = ({ 
@@ -78,8 +67,7 @@ export const ProfessionalToolCard = ({
   onClick,
   toolId
 }: ProfessionalToolCardProps) => {
-  const ColorfulIcon = getToolIcon(toolId);
-  const DisplayIcon = ColorfulIcon || Icon;
+  const processingBadge = getProcessingBadge(description);
 
   return (
     <Card 
@@ -98,18 +86,25 @@ export const ProfessionalToolCard = ({
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className={`w-14 h-14 rounded-xl flex items-center justify-center bg-gradient-to-br ${categoryColors[category]} border`}>
-            <DisplayIcon className={`w-7 h-7 ${ColorfulIcon ? '' : 'text-primary'}`} aria-hidden="true" />
+            <Icon className="w-7 h-7" aria-hidden="true" />
           </div>
-          <div className="flex gap-2">
-            {isNew && (
-              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1">
-                New
-              </Badge>
-            )}
-            {isPremium && (
-              <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs px-2 py-1">
-                AI
-              </Badge>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              {isNew && (
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1">
+                  New
+                </Badge>
+              )}
+              {isPremium && (
+                <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs px-2 py-1">
+                  Premium
+                </Badge>
+              )}
+            </div>
+            {processingBadge && (
+              <div className="flex justify-end">
+                {processingBadge}
+              </div>
             )}
           </div>
         </div>
@@ -118,7 +113,7 @@ export const ProfessionalToolCard = ({
           {title}
         </h3>
         
-        <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
+        <p className="text-muted-foreground text-sm mb-4 line-clamp-3 leading-relaxed">
           {description}
         </p>
 

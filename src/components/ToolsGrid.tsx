@@ -2,29 +2,11 @@
 import { useNavigate } from "react-router-dom";
 import { ProfessionalToolCard } from "./ProfessionalToolCard";
 import { 
-  FileText, 
-  Scissors, 
-  RotateCcw, 
-  Archive, 
-  Shield, 
   Eye,
-  FileImage,
-  FileSpreadsheet,
-  Download,
-  Crop,
-  Edit3,
-  Layers,
-  Lock,
-  Unlock,
-  FileUp,
-  FileDown,
-  Image,
-  Type,
-  FilePlus,
-  Zap,
-  Settings,
+  Globe,
   Star,
-  Globe
+  Settings,
+  Zap
 } from "lucide-react";
 import { 
   MergePDFIcon, 
@@ -52,7 +34,7 @@ const tools = [
   {
     id: "merge-pdf",
     title: "Merge PDF Files",
-    description: "Combine multiple PDF documents into a single file instantly",
+    description: "Combine multiple PDF documents into a single file instantly • Client-side processing",
     icon: MergePDFIcon,
     category: "organize" as const,
     isNew: false,
@@ -62,7 +44,7 @@ const tools = [
   {
     id: "split-pdf", 
     title: "Split PDF Pages",
-    description: "Extract specific pages or split PDF into multiple documents",
+    description: "Extract specific pages or split PDF into multiple documents • Client-side processing",
     icon: SplitPDFIcon,
     category: "organize" as const,
     isNew: false,
@@ -72,7 +54,7 @@ const tools = [
   {
     id: "rotate-pdf",
     title: "Rotate PDF Pages", 
-    description: "Rotate PDF pages 90, 180, or 270 degrees permanently",
+    description: "Rotate PDF pages 90, 180, or 270 degrees permanently • Client-side processing",
     icon: RotatePDFIcon,
     category: "edit" as const,
     isNew: false,
@@ -82,7 +64,7 @@ const tools = [
   {
     id: "crop-pdf",
     title: "Crop PDF Pages", 
-    description: "Trim and resize PDF pages to custom dimensions",
+    description: "Trim and resize PDF pages to custom dimensions • Client-side processing",
     icon: CropPDFIcon,
     category: "edit" as const,
     isNew: false,
@@ -92,7 +74,7 @@ const tools = [
   {
     id: "extract-pages",
     title: "Extract PDF Pages",
-    description: "Extract and save specific pages from PDF documents",
+    description: "Extract and save specific pages from PDF documents • Client-side processing",
     icon: ExtractPDFIcon,
     category: "organize" as const,
     isNew: false,
@@ -102,7 +84,7 @@ const tools = [
   {
     id: "view-pdf",
     title: "View PDF Online",
-    description: "Preview and view PDF documents with zoom and navigation",
+    description: "Preview and view PDF documents with zoom and navigation • Client-side processing",
     icon: ViewPDFIcon,
     category: "edit" as const,
     isNew: false,
@@ -112,7 +94,7 @@ const tools = [
   {
     id: "watermark-pdf",
     title: "Add PDF Watermark",
-    description: "Insert text or image watermarks into PDF documents",
+    description: "Insert text or image watermarks into PDF documents • Client-side processing",
     icon: WatermarkPDFIcon,
     category: "edit" as const,
     isNew: false,
@@ -122,7 +104,7 @@ const tools = [
   {
     id: "pdf-to-text",
     title: "PDF to Text Extractor",
-    description: "Extract and copy text content from PDF documents",
+    description: "Extract and copy text content from PDF documents • Client-side processing",
     icon: TextExtractIcon,
     category: "convert" as const,
     isNew: false,
@@ -132,7 +114,7 @@ const tools = [
   {
     id: "compress-pdf",
     title: "Compress PDF Size",
-    description: "Reduce PDF file size while maintaining document quality",
+    description: "Reduce PDF file size while maintaining document quality • Client-side processing",
     icon: CompressPDFIcon,
     category: "optimize" as const,
     isNew: false,
@@ -142,7 +124,7 @@ const tools = [
   {
     id: "image-to-pdf",
     title: "Image to PDF Converter",
-    description: "Convert JPG, PNG, and other images to PDF format",
+    description: "Convert JPG, PNG, and other images to PDF format • Client-side processing",
     icon: ImageConvertIcon,
     category: "convert" as const,
     isNew: false,
@@ -150,148 +132,166 @@ const tools = [
     isClientSide: true
   },
 
-  // Backend-powered tools (require server processing)
+  // Backend-powered tools (require server processing) - Clearly labeled
   {
     id: "pdf-to-word",
     title: "PDF to Word Converter",
-    description: "Convert PDF documents to editable Microsoft Word format",
+    description: "Convert PDF documents to editable Microsoft Word format • Server-side AI processing",
     icon: WordDocIcon,
     category: "convert" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "pdf-to-excel",
     title: "PDF to Excel Converter",
-    description: "Extract tables and data from PDF to Excel spreadsheets",
+    description: "Extract tables and data from PDF to Excel spreadsheets • Server-side AI processing",
     icon: ExcelDocIcon,
     category: "convert" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "pdf-to-jpg",
     title: "PDF to JPG Converter",
-    description: "Convert PDF pages to high-quality JPG image files",
+    description: "Convert PDF pages to high-quality JPG image files • Server-side processing",
     icon: ImageConvertIcon,
     category: "convert" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "pdf-to-png",
     title: "PDF to PNG Converter",
-    description: "Transform PDF pages into PNG images with transparency",
+    description: "Transform PDF pages into PNG images with transparency • Server-side processing",
     icon: ImageConvertIcon,
     category: "convert" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "word-to-pdf",
     title: "Word to PDF Converter",
-    description: "Convert Microsoft Word documents to PDF format",
+    description: "Convert Microsoft Word documents to PDF format • Server-side processing",
     icon: WordDocIcon,
     category: "convert" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "excel-to-pdf",
     title: "Excel to PDF Converter", 
-    description: "Transform Excel spreadsheets into PDF documents",
+    description: "Transform Excel spreadsheets into PDF documents • Server-side processing",
     icon: ExcelDocIcon,
     category: "convert" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "html-to-pdf",
     title: "HTML to PDF Converter",
-    description: "Convert web pages and HTML content to PDF format",
+    description: "Convert web pages and HTML content to PDF format • Server-side rendering",
     icon: HTMLDocIcon,
     category: "convert" as const,
     isNew: true,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "protect-pdf",
     title: "Password Protect PDF",
-    description: "Add password security and encryption to PDF documents", 
+    description: "Add password security and encryption to PDF documents • Server-side encryption", 
     icon: PasswordIcon,
     category: "security" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "unlock-pdf",
     title: "Remove PDF Password",
-    description: "Remove password protection from encrypted PDF files", 
+    description: "Remove password protection from encrypted PDF files • Server-side decryption", 
     icon: UnlockIcon,
     category: "security" as const,
     isNew: false,
     isPremium: false,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true
   },
   {
     id: "edit-pdf",
     title: "Edit PDF Online",
-    description: "Add text, images, shapes, and annotations to PDF files",
+    description: "Add text, images, shapes, and annotations to PDF files • Server-side AI processing",
     icon: EditPDFIcon,
     category: "edit" as const,
     isNew: false,
-    iPremium: true,
-    isClientSide: false
+    isPremium: true,
+    isClientSide: false,
+    isServerSide: true
   },
 
-  // Advanced/Premium AI tools
+  // Advanced/Premium AI tools - Clearly labeled as AI-powered
   {
     id: "ocr-pdf",
     title: "OCR PDF Scanner",
-    description: "Convert scanned PDFs to searchable and editable text",
+    description: "Convert scanned PDFs to searchable and editable text • Advanced AI OCR processing",
     icon: Eye,
     category: "ai" as const,
     isNew: true,
     isPremium: true,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true,
+    isAIPowered: true
   },
   {
     id: "translate-pdf",
     title: "Translate PDF",
-    description: "Translate PDF documents to different languages using AI",
+    description: "Translate PDF documents to different languages using AI • Neural translation engine",
     icon: Globe,
     category: "ai" as const,
     isNew: true,
     isPremium: true,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true,
+    isAIPowered: true
   },
   {
     id: "summarize-pdf",
     title: "AI PDF Summarizer",
-    description: "Generate intelligent summaries of your PDF documents",
+    description: "Generate intelligent summaries of your PDF documents • GPT-powered analysis",
     icon: Star,
     category: "ai" as const,
     isNew: true,
     isPremium: true,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true,
+    isAIPowered: true
   },
   {
     id: "chat-pdf",
     title: "Chat with PDF",
-    description: "Ask questions and get answers from your PDF documents",
+    description: "Ask questions and get answers from your PDF documents • RAG-enabled AI chat",
     icon: Settings,
     category: "ai" as const,
     isNew: true,
     isPremium: true,
-    isClientSide: false
+    isClientSide: false,
+    isServerSide: true,
+    isAIPowered: true
   }
 ];
 
@@ -327,15 +327,15 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
   };
 
   const getSectionDescription = () => {
-    if (!filter) return "Transform, edit, organize, and secure your PDF documents with our comprehensive suite of professional tools";
+    if (!filter) return "Transform, edit, organize, and secure your PDF documents with our comprehensive suite of professional tools featuring both client-side and server-side processing";
     switch (filter) {
-      case "convert": return "Convert PDFs to various formats and vice versa with high-quality results";
-      case "edit": return "Modify, enhance, and customize your PDF documents with advanced editing features";
-      case "organize": return "Merge, split, and organize your PDF files for better document management";
-      case "security": return "Protect and secure your PDF documents with password encryption and permissions";
-      case "ai": return "Leverage artificial intelligence for advanced PDF processing and automation";
-      case "optimize": return "Reduce file sizes and optimize PDFs for web, email, and storage";
-      default: return "Professional PDF processing tools for all your document needs";
+      case "convert": return "Convert PDFs to various formats and vice versa with high-quality results using advanced AI and server processing";
+      case "edit": return "Modify, enhance, and customize your PDF documents with advanced editing features and real-time processing";
+      case "organize": return "Merge, split, and organize your PDF files for better document management with instant client-side processing";
+      case "security": return "Protect and secure your PDF documents with password encryption and permissions using server-side security";
+      case "ai": return "Leverage artificial intelligence for advanced PDF processing, OCR, translation, and intelligent document analysis";
+      case "optimize": return "Reduce file sizes and optimize PDFs for web, email, and storage with smart compression algorithms";
+      default: return "Professional PDF processing tools for all your document needs with cutting-edge technology";
     }
   };
 
@@ -346,7 +346,7 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-4">
               <Star className="w-6 h-6 text-yellow-500 mr-2" />
-              <span className="text-sm font-medium text-primary">25+ Professional Tools</span>
+              <span className="text-sm font-medium text-primary">25+ Professional Tools • Client-side & Server-side • AI-Powered</span>
               <Star className="w-6 h-6 text-yellow-500 ml-2" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
@@ -369,6 +369,7 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
               isNew={tool.isNew}
               isPremium={tool.isPremium}
               onClick={() => handleToolClick(tool.id)}
+              toolId={tool.id}
             />
           ))}
         </div>
@@ -378,7 +379,7 @@ export const ToolsGrid = ({ filter, showTitle = true }: ToolsGridProps) => {
             <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full border">
               <Zap className="w-5 h-5 text-primary mr-2" />
               <span className="text-sm font-medium text-foreground">
-                Advanced PDF processing • Client-side & Server-side tools • Secure & Fast
+                Advanced PDF processing • Client-side & Server-side • AI-Powered • Secure & Fast • SEO Optimized
               </span>
             </div>
           </div>
