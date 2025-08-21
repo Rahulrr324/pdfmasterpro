@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertTriangle, Download } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Download, Clock } from 'lucide-react';
 import { FileUploader } from './FileUploader';
 import { PDFViewer } from './PDFViewer';
 import { PDFToolOptions } from './PDFToolOptions';
@@ -18,6 +18,19 @@ interface PDFProcessorProps {
   toolId?: string;
 }
 
+const CLIENT_SIDE_TOOLS = [
+  'merge-pdf', 'split-pdf', 'rotate-pdf', 'compress-pdf', 
+  'extract-pages', 'watermark-pdf', 'crop-pdf', 'view-pdf', 
+  'pdf-to-text', 'image-to-pdf'
+];
+
+const SERVER_SIDE_TOOLS = [
+  'pdf-to-word', 'pdf-to-excel', 'pdf-to-jpg', 'pdf-to-png',
+  'word-to-pdf', 'excel-to-pdf', 'html-to-pdf', 'protect-pdf',
+  'unlock-pdf', 'edit-pdf', 'ocr-pdf', 'translate-pdf', 
+  'summarize-pdf', 'chat-pdf'
+];
+
 export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
   const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
@@ -27,6 +40,9 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [options, setOptions] = useState<Record<string, any>>({});
+
+  const isClientSide = toolId ? CLIENT_SIDE_TOOLS.includes(toolId) : false;
+  const isServerSide = toolId ? SERVER_SIDE_TOOLS.includes(toolId) : false;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -54,6 +70,17 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
       return;
     }
 
+    // Handle server-side tools
+    if (isServerSide) {
+      toast({
+        title: "Coming Soon",
+        description: "This advanced feature will be available soon with our server infrastructure.",
+        variant: "default"
+      });
+      return;
+    }
+
+    // Handle client-side processing
     setIsProcessing(true);
     setError(null);
     setProgress(0);
@@ -69,9 +96,9 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             clearInterval(progressInterval);
             return 90;
           }
-          return prev + 15;
+          return prev + 10;
         });
-      }, 300);
+      }, 200);
 
       let result: Uint8Array | Uint8Array[] | string;
 
@@ -125,12 +152,12 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             result = await PDFEngine.convertImagesToPDF(files);
             setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
           } else {
-            throw new Error('Conversion type not supported in browser');
+            throw new Error('This conversion tool is coming soon');
           }
           break;
 
         default:
-          throw new Error(`Tool ${tool} not implemented`);
+          throw new Error(`Tool ${tool} is coming soon`);
       }
 
       clearInterval(progressInterval);
@@ -156,7 +183,6 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
 
   const handleDownload = (fileIndex: number = 0) => {
     if (processedText) {
-      // Download text file
       const blob = new Blob([processedText], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -206,14 +232,18 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
       'html-to-pdf': 'HTML to PDF',
       'protect-pdf': 'Protect PDF',
       'unlock-pdf': 'Unlock PDF',
-      'edit-pdf': 'Edit PDF'
+      'edit-pdf': 'Edit PDF',
+      'ocr-pdf': 'OCR PDF Scanner',
+      'translate-pdf': 'Translate PDF',
+      'summarize-pdf': 'AI PDF Summarizer',
+      'chat-pdf': 'Chat with PDF'
     };
     return toolTitles[id] || 'PDF Tool';
   };
 
   const getAcceptedTypes = () => {
     if (toolId === 'image-to-pdf') {
-      return '.jpg,.jpeg,.png';
+      return '.jpg,.jpeg,.png,.gif,.bmp,.webp';
     }
     return '.pdf';
   };
@@ -236,9 +266,17 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
           <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
             {getToolTitle(toolId || '')}
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm mb-2">
             Professional PDF processing tool
           </p>
+          {isServerSide && (
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              <Clock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                Advanced Server Processing - Coming Soon
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -255,12 +293,14 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
               acceptedTypes={getAcceptedTypes()}
             />
 
-            <PDFToolOptions 
-              tool={tool}
-              options={options}
-              onOptionsChange={handleOptionsChange}
-              toolId={toolId}
-            />
+            {isClientSide && (
+              <PDFToolOptions 
+                tool={tool}
+                options={options}
+                onOptionsChange={handleOptionsChange}
+                toolId={toolId}
+              />
+            )}
             
             <Button 
               onClick={handleProcess}
@@ -268,8 +308,27 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
               className="w-full"
               size="lg"
             >
-              {isProcessing ? 'Processing...' : `Process ${getToolTitle(toolId || '')}`}
+              {isProcessing ? 'Processing...' : 
+               isServerSide ? 'Preview Feature (Coming Soon)' : 
+               `Process ${getToolTitle(toolId || '')}`}
             </Button>
+
+            {isServerSide && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  Advanced Processing Coming Soon
+                </h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                  This tool requires advanced server infrastructure for optimal performance and will be available soon.
+                </p>
+                <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                  <li>• High-quality document conversion</li>
+                  <li>• Advanced OCR and AI features</li>
+                  <li>• Enterprise-grade security</li>
+                  <li>• Batch processing capabilities</li>
+                </ul>
+              </div>
+            )}
           </CardContent>
         </Card>
 

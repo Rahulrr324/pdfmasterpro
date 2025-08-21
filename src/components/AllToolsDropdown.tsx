@@ -5,9 +5,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, FileText, Edit3, FolderOpen, Shield, Zap, Settings } from "lucide-react";
+import { ChevronDown, FileText, Edit3, FolderOpen, Shield, Zap, Brain } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const categories = [
   {
@@ -15,15 +15,15 @@ const categories = [
     icon: FileText,
     description: "Transform PDFs to different formats",
     tools: [
-      { id: "pdf-to-word", title: "PDF to Word", badge: "Server-side" },
-      { id: "pdf-to-excel", title: "PDF to Excel", badge: "Server-side" },
-      { id: "pdf-to-jpg", title: "PDF to JPG", badge: "Server-side" },
-      { id: "pdf-to-png", title: "PDF to PNG", badge: "Server-side" },
-      { id: "word-to-pdf", title: "Word to PDF", badge: "Server-side" },
-      { id: "excel-to-pdf", title: "Excel to PDF", badge: "Server-side" },
-      { id: "html-to-pdf", title: "HTML to PDF", badge: "Server-side" },
-      { id: "image-to-pdf", title: "Image to PDF", badge: "Client-side" },
-      { id: "pdf-to-text", title: "PDF to Text", badge: "Client-side" },
+      { id: "pdf-to-word", title: "PDF to Word", comingSoon: true },
+      { id: "pdf-to-excel", title: "PDF to Excel", comingSoon: true },
+      { id: "pdf-to-jpg", title: "PDF to JPG", comingSoon: true },
+      { id: "pdf-to-png", title: "PDF to PNG", comingSoon: true },
+      { id: "word-to-pdf", title: "Word to PDF", comingSoon: true },
+      { id: "excel-to-pdf", title: "Excel to PDF", comingSoon: true },
+      { id: "html-to-pdf", title: "HTML to PDF", comingSoon: true },
+      { id: "image-to-pdf", title: "Image to PDF", comingSoon: false },
+      { id: "pdf-to-text", title: "PDF to Text", comingSoon: false },
     ]
   },
   {
@@ -31,11 +31,11 @@ const categories = [
     icon: Edit3,
     description: "Modify and enhance PDFs",
     tools: [
-      { id: "edit-pdf", title: "Edit PDF", badge: "AI-Powered" },
-      { id: "rotate-pdf", title: "Rotate PDF", badge: "Client-side" },
-      { id: "crop-pdf", title: "Crop PDF", badge: "Client-side" },
-      { id: "watermark-pdf", title: "Add Watermark", badge: "Client-side" },
-      { id: "view-pdf", title: "View PDF", badge: "Client-side" },
+      { id: "edit-pdf", title: "Edit PDF", comingSoon: true },
+      { id: "rotate-pdf", title: "Rotate PDF", comingSoon: false },
+      { id: "crop-pdf", title: "Crop PDF", comingSoon: false },
+      { id: "watermark-pdf", title: "Add Watermark", comingSoon: false },
+      { id: "view-pdf", title: "View PDF", comingSoon: false },
     ]
   },
   {
@@ -43,9 +43,9 @@ const categories = [
     icon: FolderOpen,
     description: "Manage PDF structure",
     tools: [
-      { id: "merge-pdf", title: "Merge PDF", badge: "Client-side" },
-      { id: "split-pdf", title: "Split PDF", badge: "Client-side" },
-      { id: "extract-pages", title: "Extract Pages", badge: "Client-side" },
+      { id: "merge-pdf", title: "Merge PDF", comingSoon: false },
+      { id: "split-pdf", title: "Split PDF", comingSoon: false },
+      { id: "extract-pages", title: "Extract Pages", comingSoon: false },
     ]
   },
   {
@@ -53,8 +53,8 @@ const categories = [
     icon: Shield,
     description: "Protect your documents",
     tools: [
-      { id: "protect-pdf", title: "Protect PDF", badge: "Server-side" },
-      { id: "unlock-pdf", title: "Unlock PDF", badge: "Server-side" },
+      { id: "protect-pdf", title: "Protect PDF", comingSoon: true },
+      { id: "unlock-pdf", title: "Unlock PDF", comingSoon: true },
     ]
   },
   {
@@ -62,38 +62,37 @@ const categories = [
     icon: Zap,
     description: "Improve performance",
     tools: [
-      { id: "compress-pdf", title: "Compress PDF", badge: "Client-side" },
+      { id: "compress-pdf", title: "Compress PDF", comingSoon: false },
     ]
   },
   {
     title: "AI Tools",
-    icon: Settings,
+    icon: Brain,
     description: "AI-powered features",
     tools: [
-      { id: "ocr-pdf", title: "OCR PDF", badge: "AI-Powered" },
-      { id: "translate-pdf", title: "Translate PDF", badge: "AI-Powered" },
-      { id: "summarize-pdf", title: "Summarize PDF", badge: "AI-Powered" },
-      { id: "chat-pdf", title: "Chat with PDF", badge: "AI-Powered" },
+      { id: "ocr-pdf", title: "OCR PDF", comingSoon: true },
+      { id: "translate-pdf", title: "Translate PDF", comingSoon: true },
+      { id: "summarize-pdf", title: "Summarize PDF", comingSoon: true },
+      { id: "chat-pdf", title: "Chat with PDF", comingSoon: true },
     ]
   },
 ];
 
-const getBadgeStyle = (badge: string) => {
-  switch (badge) {
-    case "Client-side":
-      return "bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full";
-    case "Server-side":
-      return "bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full";
-    case "AI-Powered":
-      return "bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full";
-    default:
-      return "bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full";
-  }
-};
-
 export const AllToolsDropdown = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  let hoverTimeout: NodeJS.Timeout;
+
+  const handleMouseEnter = () => {
+    clearTimeout(hoverTimeout);
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeout = setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
+  };
 
   const handleToolClick = (toolId: string) => {
     navigate(`/tool/${toolId}`);
@@ -105,12 +104,18 @@ export const AllToolsDropdown = () => {
     setIsOpen(false);
   };
 
+  useEffect(() => {
+    return () => {
+      clearTimeout(hoverTimeout);
+    };
+  }, []);
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <div
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           <Button 
             variant="ghost" 
@@ -122,10 +127,10 @@ export const AllToolsDropdown = () => {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        className="w-[900px] p-6 bg-white dark:bg-gray-900 border shadow-2xl z-50" 
+        className="w-[900px] p-6 bg-background border shadow-2xl z-50" 
         align="start"
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div className="grid grid-cols-3 gap-8">
           {categories.map((category) => (
@@ -152,9 +157,16 @@ export const AllToolsDropdown = () => {
                     <span className="text-sm text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 px-2 py-1 rounded transition-colors flex-1">
                       {tool.title}
                     </span>
-                    <span className={getBadgeStyle(tool.badge)}>
-                      {tool.badge}
-                    </span>
+                    {tool.comingSoon && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                        Soon
+                      </span>
+                    )}
+                    {!tool.comingSoon && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700">
+                        Ready
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -162,12 +174,11 @@ export const AllToolsDropdown = () => {
           ))}
         </div>
         
-        <div className="mt-6 pt-4 border-t">
+        <div className="mt-6 pt-4 border-t border-border">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">
-              <span className="font-medium text-green-600">Client-side:</span> Process locally in your browser • 
-              <span className="font-medium text-blue-600 ml-2">Server-side:</span> Advanced processing • 
-              <span className="font-medium text-purple-600 ml-2">AI-Powered:</span> Machine learning features
+              <span className="font-medium text-green-600 dark:text-green-400">Ready:</span> Available now • 
+              <span className="font-medium text-blue-600 dark:text-blue-400 ml-2">Soon:</span> Coming with advanced features
             </p>
             <Button 
               variant="outline" 
@@ -176,7 +187,7 @@ export const AllToolsDropdown = () => {
                 navigate('/categories');
                 setIsOpen(false);
               }}
-              className="hover:bg-primary hover:text-white transition-colors"
+              className="hover:bg-primary hover:text-primary-foreground transition-colors"
             >
               View All Categories →
             </Button>
