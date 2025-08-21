@@ -1,5 +1,5 @@
 
-import { PDFDocument, degrees, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, degrees, StandardFonts, rgb } from 'pdf-lib';
 
 export class PDFEngine {
   // Enhanced merge with better error handling
@@ -33,7 +33,7 @@ export class PDFEngine {
         
       } catch (error) {
         console.error(`Error processing ${file.name}:`, error);
-        throw new Error(`Failed to process ${file.name}. The file may be corrupted or password-protected.`);
+        throw new Error(`Failed to process ${file.name}. The file may be corrupted.`);
       }
     }
     
@@ -56,7 +56,7 @@ export class PDFEngine {
 
     console.log(`PDF has ${pageCount} pages`);
 
-    if (options.mode === 'individual') {
+    if (options.mode === 'individual' || !options.mode) {
       // Split into individual pages
       for (let i = 0; i < pageCount; i++) {
         const newPdf = await PDFDocument.create();
@@ -112,8 +112,8 @@ export class PDFEngine {
     pdf.setAuthor('');
     pdf.setSubject('');
     pdf.setKeywords([]);
-    pdf.setProducer('PDF Tools Pro');
-    pdf.setCreator('PDF Tools Pro');
+    pdf.setProducer('PDF Tools');
+    pdf.setCreator('PDF Tools');
     pdf.setCreationDate(new Date());
     pdf.setModificationDate(new Date());
     
@@ -175,14 +175,6 @@ export class PDFEngine {
           page.setRotation(degrees(currentRotation + rotationAngle));
         }
       });
-    } else if (options.pageSelection === 'custom' && options.customPages) {
-      const pageIndices = this.parsePageNumbers(options.customPages, pages.length);
-      pageIndices.forEach((pageIndex) => {
-        if (pageIndex >= 0 && pageIndex < pages.length) {
-          const currentRotation = pages[pageIndex].getRotation().angle;
-          pages[pageIndex].setRotation(degrees(currentRotation + rotationAngle));
-        }
-      });
     }
     
     return await pdf.save();
@@ -200,10 +192,13 @@ export class PDFEngine {
     
     if (options.pageNumbers) {
       pageIndices = this.parsePageNumbers(options.pageNumbers, pdf.getPageCount());
+    } else {
+      // Default to first page if no pages specified
+      pageIndices = [0];
     }
     
     if (pageIndices.length === 0) {
-      throw new Error('No valid pages specified for extraction. Please enter page numbers like: 1,3,5-8');
+      throw new Error('No valid pages specified for extraction');
     }
     
     console.log(`Extracting pages: ${pageIndices.map(i => i + 1).join(', ')}`);
@@ -212,38 +207,6 @@ export class PDFEngine {
     copiedPages.forEach(page => newPdf.addPage(page));
     
     return await newPdf.save();
-  }
-
-  // Password protection (browser limitation notice)
-  static async protectPDF(file: File, options: any): Promise<Uint8Array> {
-    throw new Error('PDF encryption requires server-side processing with specialized cryptographic libraries. Browser-based encryption is not secure or reliable. Please use desktop PDF software like Adobe Acrobat or similar tools for proper password protection.');
-  }
-
-  // Unlock PDF (limited browser capability)
-  static async unlockPDF(file: File, options: any): Promise<Uint8Array> {
-    console.log('Attempting to unlock PDF');
-    
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      
-      // Try to load without password first
-      try {
-        const pdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
-        console.log('PDF loaded successfully without password');
-        
-        // Clear any protection metadata
-        pdf.setTitle('Unlocked PDF');
-        pdf.setCreator('PDF Tools Pro - Unlocked');
-        
-        return await pdf.save();
-      } catch (loadError) {
-        console.error('Failed to load PDF:', loadError);
-        throw new Error('This PDF is password-protected. Browser-based PDF unlocking has significant limitations and cannot handle most encrypted PDFs. Please use desktop software like Adobe Acrobat, PDFtk, or similar tools for reliable password removal.');
-      }
-    } catch (error) {
-      console.error('Unlock error:', error);
-      throw new Error('Failed to unlock PDF. The file may be corrupted or uses encryption that cannot be handled in browsers.');
-    }
   }
 
   // Enhanced watermark with better positioning
@@ -257,28 +220,18 @@ export class PDFEngine {
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     let watermarkText = options.text || 'WATERMARK';
     
-    // Handle different watermark types
     if (options.type === 'timestamp') {
       const now = new Date();
-      switch (options.text) {
-        case 'iso':
-          watermarkText = now.toISOString().split('T')[0];
-          break;
-        case 'relative':
-          watermarkText = `Processed on ${now.toLocaleDateString()}`;
-          break;
-        default:
-          watermarkText = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-      }
+      watermarkText = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
     }
     
     const fontSize = options.fontSize || 50;
     const opacity = options.opacity || 0.3;
     const position = options.position || 'center';
     
-    console.log(`Adding watermark: "${watermarkText}" at ${position} with ${opacity} opacity`);
+    console.log(`Adding watermark: "${watermarkText}" at ${position}`);
     
-    pages.forEach((page, index) => {
+    pages.forEach((page) => {
       const { width, height } = page.getSize();
       let x = width / 2 - (watermarkText.length * fontSize) / 4;
       let y = height / 2;
@@ -301,14 +254,8 @@ export class PDFEngine {
           x = width - (watermarkText.length * fontSize * 0.6);
           y = 50;
           break;
-        case 'diagonal':
-          // Create diagonal pattern
-          x = width / 4;
-          y = height / 4;
-          break;
         case 'center':
         default:
-          // Center position (already calculated)
           break;
       }
       
@@ -339,7 +286,7 @@ export class PDFEngine {
     const marginLeft = Math.max(0, Math.min(50, (options.marginLeft || 0))) / 100;
     const marginRight = Math.max(0, Math.min(50, (options.marginRight || 0))) / 100;
     
-    pages.forEach((page, index) => {
+    pages.forEach((page) => {
       const { width, height } = page.getSize();
       
       const cropBox = {
@@ -349,7 +296,6 @@ export class PDFEngine {
         height: height - (marginTop + marginBottom) * height,
       };
       
-      // Ensure crop box is valid
       if (cropBox.width > 10 && cropBox.height > 10) {
         page.setCropBox(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
       }
@@ -358,36 +304,7 @@ export class PDFEngine {
     return await pdf.save();
   }
 
-  // Basic PDF editing
-  static async editPDF(file: File, options: any): Promise<Uint8Array> {
-    console.log('Starting PDF editing with options:', options);
-    
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await PDFDocument.load(arrayBuffer);
-    const pages = pdf.getPages();
-    
-    if (options.text && pages.length > 0) {
-      const font = await pdf.embedFont(StandardFonts.Helvetica);
-      const pageIndex = Math.max(0, Math.min(pages.length - 1, options.pageNumber || 0));
-      const page = pages[pageIndex];
-      
-      page.drawText(options.text, {
-        x: Math.max(0, options.x || 50),
-        y: Math.max(0, options.y || 50),
-        size: Math.max(8, Math.min(72, options.fontSize || 12)),
-        font,
-        color: rgb(
-          Math.max(0, Math.min(1, options.color?.r || 0)),
-          Math.max(0, Math.min(1, options.color?.g || 0)),
-          Math.max(0, Math.min(1, options.color?.b || 0))
-        ),
-      });
-    }
-    
-    return await pdf.save();
-  }
-
-  // Enhanced conversion handling
+  // PDF to text conversion
   static async convertPDF(file: File, options: any): Promise<Uint8Array | string> {
     console.log('Starting PDF conversion for:', options.toolId);
     
@@ -402,39 +319,17 @@ export class PDFEngine {
       extractedText += `Pages: ${pages.length}\n`;
       extractedText += `File Size: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} MB\n`;
       extractedText += `Extraction Date: ${new Date().toLocaleString()}\n\n`;
-      extractedText += `--- IMPORTANT NOTE ---\n`;
-      extractedText += `This is a basic text extraction using PDF-lib library.\n`;
-      extractedText += `For accurate text extraction with proper formatting, OCR capabilities,\n`;
-      extractedText += `and table recognition, please use specialized tools like:\n`;
-      extractedText += `- Adobe Acrobat Pro\n`;
-      extractedText += `- PDFtk\n`;
-      extractedText += `- Online OCR services\n\n`;
-      extractedText += `--- DOCUMENT SUMMARY ---\n`;
-      extractedText += `Pages processed: ${pages.length}\n`;
-      extractedText += `Processing method: Browser-based extraction\n`;
-      extractedText += `Limitations: Cannot extract formatted text, tables, or perform OCR\n\n`;
+      extractedText += `--- EXTRACTED TEXT ---\n`;
+      extractedText += `Note: This is a basic text extraction. For advanced OCR and formatting,\n`;
+      extractedText += `please use specialized OCR software.\n\n`;
       
       return extractedText;
     }
     
-    // Handle conversion limitations
-    if (options.toolId === 'pdf-to-word' || options.toolId === 'pdf-to-excel') {
-      throw new Error(`${options.toolId.replace('-', ' to ').toUpperCase()} conversion requires advanced document processing libraries and server-side conversion engines. This type of conversion cannot be reliably performed in browsers due to the complexity of maintaining document formatting, styles, and structure. Please use desktop software like Adobe Acrobat, LibreOffice, or online conversion services that provide server-side processing.`);
-    }
-    
-    if (options.toolId?.includes('to-jpg') || options.toolId?.includes('to-png')) {
-      throw new Error('PDF to image conversion requires PDF rendering capabilities and canvas manipulation that are beyond basic browser PDF processing. For high-quality image conversion, please use desktop software like Adobe Acrobat, GIMP, or specialized PDF to image converters.');
-    }
-    
-    // For other document to PDF conversions
-    if (options.toolId?.includes('-to-pdf') && !options.toolId.includes('image')) {
-      throw new Error('Document to PDF conversion (Word, Excel, etc.) requires specialized document parsing libraries and server-side processing. Browser-based conversion cannot handle complex document formats reliably.');
-    }
-    
     // Return processed PDF for other cases
     const pdf = await PDFDocument.load(arrayBuffer);
-    pdf.setCreator('PDF Tools Pro - Processed');
-    pdf.setProducer('PDF Tools Pro');
+    pdf.setCreator('PDF Tools - Processed');
+    pdf.setProducer('PDF Tools');
     return await pdf.save();
   }
 
@@ -448,9 +343,8 @@ export class PDFEngine {
     for (const file of files) {
       console.log(`Processing image: ${file.name}`);
       
-      // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        console.warn(`Skipping ${file.name} - file too large (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+        console.warn(`Skipping ${file.name} - file too large`);
         continue;
       }
       
@@ -467,34 +361,28 @@ export class PDFEngine {
           continue;
         }
         
-        // Create a page with proper sizing
         const page = pdf.addPage();
         const { width: pageWidth, height: pageHeight } = page.getSize();
         
-        // Calculate scaling to fit image on page while maintaining aspect ratio
         const imageAspectRatio = image.width / image.height;
         const pageAspectRatio = pageWidth / pageHeight;
         
         let imageWidth, imageHeight;
-        const padding = 40; // 20pt padding on each side
+        const padding = 40;
         const maxWidth = pageWidth - padding;
         const maxHeight = pageHeight - padding;
         
         if (imageAspectRatio > pageAspectRatio) {
-          // Image is wider relative to page
           imageWidth = maxWidth;
           imageHeight = imageWidth / imageAspectRatio;
         } else {
-          // Image is taller relative to page
           imageHeight = maxHeight;
           imageWidth = imageHeight * imageAspectRatio;
         }
         
-        // Ensure image fits within page bounds
         imageWidth = Math.min(imageWidth, maxWidth);
         imageHeight = Math.min(imageHeight, maxHeight);
         
-        // Center the image on the page
         const x = (pageWidth - imageWidth) / 2;
         const y = (pageHeight - imageHeight) / 2;
         
@@ -510,12 +398,11 @@ export class PDFEngine {
         
       } catch (error) {
         console.error(`Failed to process image ${file.name}:`, error);
-        // Continue with other images instead of failing completely
       }
     }
     
     if (processedCount === 0) {
-      throw new Error('No valid images were processed. Please ensure you upload JPG or PNG files under 10MB each.');
+      throw new Error('No valid images were processed. Please upload JPG or PNG files under 10MB each.');
     }
     
     console.log(`Image to PDF conversion complete. Processed ${processedCount} images.`);
@@ -557,11 +444,11 @@ export class PDFEngine {
       };
     } catch (error) {
       console.error('Failed to get PDF info:', error);
-      throw new Error('Failed to read PDF file. The file may be corrupted, password-protected, or not a valid PDF.');
+      throw new Error('Failed to read PDF file. The file may be corrupted or not a valid PDF.');
     }
   }
 
-  // Enhanced page number parser with better validation
+  // Enhanced page number parser
   private static parsePageNumbers(pageStr: string, totalPages: number): number[] {
     const indices: number[] = [];
     const parts = pageStr.replace(/\s+/g, '').split(',');
@@ -582,17 +469,16 @@ export class PDFEngine {
         const actualEnd = Math.min(totalPages, end);
         
         for (let i = actualStart; i <= actualEnd; i++) {
-          indices.push(i - 1); // Convert to 0-based index
+          indices.push(i - 1);
         }
       } else {
         const pageNum = parseInt(part);
         if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
-          indices.push(pageNum - 1); // Convert to 0-based index
+          indices.push(pageNum - 1);
         }
       }
     }
     
-    // Remove duplicates and sort
     return [...new Set(indices)].sort((a, b) => a - b);
   }
 }

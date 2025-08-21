@@ -1,13 +1,15 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Download } from 'lucide-react';
 import { FileUploader } from './FileUploader';
 import { PDFViewer } from './PDFViewer';
 import { PDFToolOptions } from './PDFToolOptions';
 import { ProgressTracker } from './ProgressTracker';
+import { PDFEngine } from './PDFEngine';
+import { toast } from '@/hooks/use-toast';
 
 export type ProcessingTool = 'merge' | 'split' | 'rotate' | 'compress' | 'extract' | 'watermark' | 'crop' | 'view' | 'convert' | 'protect' | 'unlock' | 'edit';
 
@@ -19,20 +21,21 @@ interface PDFProcessorProps {
 export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
   const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
-  const [processedFile, setProcessedFile] = useState<Blob | null>(null);
+  const [processedFiles, setProcessedFiles] = useState<Blob[]>([]);
+  const [processedText, setProcessedText] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [options, setOptions] = useState<Record<string, any>>({});
 
-  // Scroll to top when component mounts or tool changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [toolId]);
 
   const handleFilesChange = useCallback((selectedFiles: File[]) => {
     setFiles(selectedFiles);
-    setProcessedFile(null);
+    setProcessedFiles([]);
+    setProcessedText('');
     setError(null);
     setProgress(0);
   }, []);
@@ -42,63 +45,133 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
   }, []);
 
   const handleProcess = async () => {
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select files to process",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);
     setProgress(0);
+    setProcessedFiles([]);
+    setProcessedText('');
 
     try {
       let progressInterval: NodeJS.Timeout;
       
-      // Simulate processing with progress updates
       progressInterval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 90) {
             clearInterval(progressInterval);
             return 90;
           }
-          return prev + 10;
+          return prev + 15;
         });
-      }, 200);
+      }, 300);
 
-      // Check if tool requires backend processing
-      const backendTools = [
-        'pdf-to-word', 'pdf-to-excel', 'word-to-pdf', 'excel-to-pdf', 
-        'html-to-pdf', 'protect-pdf', 'unlock-pdf', 'edit-pdf', 
-        'ocr-pdf', 'translate-pdf', 'summarize-pdf', 'chat-pdf',
-        'pdf-to-jpg', 'pdf-to-png'
-      ];
+      let result: Uint8Array | Uint8Array[] | string;
 
-      if (toolId && backendTools.includes(toolId)) {
-        // Show "Coming Soon" message for backend tools
-        clearInterval(progressInterval);
-        setProgress(100);
-        setError('This tool is coming soon! Backend processing features are under development.');
-      } else {
-        // Simulate client-side processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        clearInterval(progressInterval);
-        setProgress(100);
-        
-        // Create a dummy processed file for demo
-        const dummyBlob = new Blob(['Processed PDF content'], { type: 'application/pdf' });
-        setProcessedFile(dummyBlob);
+      switch (tool) {
+        case 'merge':
+          if (files.length < 2) {
+            throw new Error('Please select at least 2 PDF files to merge');
+          }
+          result = await PDFEngine.mergePDFs(files);
+          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+          break;
+
+        case 'split':
+          result = await PDFEngine.splitPDF(files[0], options);
+          const splitBlobs = (result as Uint8Array[]).map(data => 
+            new Blob([data], { type: 'application/pdf' })
+          );
+          setProcessedFiles(splitBlobs);
+          break;
+
+        case 'compress':
+          result = await PDFEngine.compressPDF(files[0], options);
+          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+          break;
+
+        case 'rotate':
+          result = await PDFEngine.rotatePDF(files[0], options);
+          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+          break;
+
+        case 'extract':
+          result = await PDFEngine.extractPages(files[0], options);
+          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+          break;
+
+        case 'watermark':
+          result = await PDFEngine.addWatermark(files[0], options);
+          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+          break;
+
+        case 'crop':
+          result = await PDFEngine.cropPDF(files[0], options);
+          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+          break;
+
+        case 'convert':
+          if (toolId === 'pdf-to-text') {
+            result = await PDFEngine.convertPDF(files[0], { toolId });
+            setProcessedText(result as string);
+          } else if (toolId === 'image-to-pdf') {
+            result = await PDFEngine.convertImagesToPDF(files);
+            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+          } else {
+            throw new Error('Conversion type not supported in browser');
+          }
+          break;
+
+        default:
+          throw new Error(`Tool ${tool} not implemented`);
       }
-    } catch (err) {
-      setError('An error occurred while processing the file.');
+
+      clearInterval(progressInterval);
+      setProgress(100);
+      
+      toast({
+        title: "Processing completed",
+        description: "Your file has been processed successfully",
+      });
+
+    } catch (err: any) {
       console.error('Processing error:', err);
+      setError(err.message || 'An error occurred while processing the file.');
+      toast({
+        title: "Processing failed",
+        description: err.message || 'An error occurred while processing the file.',
+        variant: "destructive"
+      });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleDownload = () => {
-    if (processedFile) {
-      const url = URL.createObjectURL(processedFile);
+  const handleDownload = (fileIndex: number = 0) => {
+    if (processedText) {
+      // Download text file
+      const blob = new Blob([processedText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `processed-${toolId || 'file'}.pdf`;
+      a.download = `extracted-text-${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else if (processedFiles[fileIndex]) {
+      const url = URL.createObjectURL(processedFiles[fileIndex]);
+      const a = document.createElement('a');
+      a.href = url;
+      const suffix = processedFiles.length > 1 ? `-${fileIndex + 1}` : '';
+      a.download = `processed-${toolId || 'file'}${suffix}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -106,35 +179,46 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
     }
   };
 
+  const handleDownloadAll = () => {
+    processedFiles.forEach((_, index) => {
+      setTimeout(() => handleDownload(index), index * 500);
+    });
+  };
+
   const getToolTitle = (id: string) => {
     const toolTitles: Record<string, string> = {
       'merge-pdf': 'Merge PDF Files',
       'split-pdf': 'Split PDF Pages',
       'compress-pdf': 'Compress PDF Size',
-      'pdf-to-word': 'PDF to Word Converter',
-      'pdf-to-excel': 'PDF to Excel Converter',
       'rotate-pdf': 'Rotate PDF Pages',
       'crop-pdf': 'Crop PDF Pages',
       'watermark-pdf': 'Add Watermark',
       'extract-pages': 'Extract Pages',
-      'protect-pdf': 'Protect PDF',
-      'unlock-pdf': 'Unlock PDF',
-      'edit-pdf': 'Edit PDF',
       'view-pdf': 'View PDF',
       'pdf-to-text': 'PDF to Text',
       'image-to-pdf': 'Image to PDF',
+      'pdf-to-word': 'PDF to Word',
+      'pdf-to-excel': 'PDF to Excel',
       'pdf-to-jpg': 'PDF to JPG',
       'pdf-to-png': 'PDF to PNG',
       'word-to-pdf': 'Word to PDF',
       'excel-to-pdf': 'Excel to PDF',
       'html-to-pdf': 'HTML to PDF',
-      'ocr-pdf': 'OCR PDF Scanner',
-      'translate-pdf': 'Translate PDF',
-      'summarize-pdf': 'AI PDF Summarizer',
-      'chat-pdf': 'Chat with PDF'
+      'protect-pdf': 'Protect PDF',
+      'unlock-pdf': 'Unlock PDF',
+      'edit-pdf': 'Edit PDF'
     };
     return toolTitles[id] || 'PDF Tool';
   };
+
+  const getAcceptedTypes = () => {
+    if (toolId === 'image-to-pdf') {
+      return '.jpg,.jpeg,.png';
+    }
+    return '.pdf';
+  };
+
+  const allowMultiple = toolId === 'merge-pdf' || toolId === 'image-to-pdf';
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -142,29 +226,33 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
         <Button 
           variant="ghost" 
           onClick={() => navigate(-1)}
-          className="mb-4"
+          className="mb-4 hover:bg-muted"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
         
-        <h1 className="text-3xl font-bold text-foreground">
-          {getToolTitle(toolId || '')}
-        </h1>
+        <div className="text-center">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
+            {getToolTitle(toolId || '')}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Professional PDF processing tool
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* File Upload Section */}
-        <Card>
+        <Card className="border-border">
           <CardHeader>
-            <CardTitle>Upload Files</CardTitle>
+            <CardTitle className="text-foreground">Upload Files</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <FileUploader 
               files={files}
               onFilesChange={handleFilesChange}
-              allowMultiple={toolId === 'merge-pdf'}
-              acceptedTypes=".pdf"
+              allowMultiple={allowMultiple}
+              acceptedTypes={getAcceptedTypes()}
             />
 
             <PDFToolOptions 
@@ -177,19 +265,19 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             <Button 
               onClick={handleProcess}
               disabled={files.length === 0 || isProcessing}
-              className="w-full mt-4"
+              className="w-full"
+              size="lg"
             >
               {isProcessing ? 'Processing...' : `Process ${getToolTitle(toolId || '')}`}
             </Button>
           </CardContent>
         </Card>
 
-        {/* Preview/Results Section */}
-        <Card>
+        <Card className="border-border">
           <CardHeader>
-            <CardTitle>Preview & Results</CardTitle>
+            <CardTitle className="text-foreground">Preview & Results</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {(isProcessing || progress > 0) && (
               <ProgressTracker 
                 isProcessing={isProcessing}
@@ -199,21 +287,58 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             )}
             
             {error && !isProcessing && (
-              <div className="flex items-center space-x-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                <span className="text-sm text-yellow-800">{error}</span>
+              <div className="flex items-center space-x-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                <span className="text-sm text-destructive">{error}</span>
+              </div>
+            )}
+
+            {processedText && (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg max-h-64 overflow-y-auto">
+                  <pre className="text-sm text-foreground whitespace-pre-wrap">{processedText}</pre>
+                </div>
+                <Button onClick={() => handleDownload()} className="w-full">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Text File
+                </Button>
               </div>
             )}
             
-            {files.length > 0 && !isProcessing && !error && (
+            {files.length > 0 && !isProcessing && !error && !processedText && (
               <PDFViewer file={files[0]} />
             )}
             
-            {processedFile && (
-              <div className="mt-4">
-                <Button onClick={handleDownload} className="w-full">
-                  Download Processed File
-                </Button>
+            {processedFiles.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-foreground">
+                  Processed Files ({processedFiles.length})
+                </h3>
+                {processedFiles.length === 1 ? (
+                  <Button onClick={() => handleDownload(0)} className="w-full" size="lg">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Processed File
+                  </Button>
+                ) : (
+                  <div className="space-y-2">
+                    <Button onClick={handleDownloadAll} className="w-full" size="lg">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download All Files
+                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      {processedFiles.map((_, index) => (
+                        <Button 
+                          key={index}
+                          onClick={() => handleDownload(index)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          File {index + 1}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
