@@ -1,14 +1,15 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertTriangle, Download, Clock, Info } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Download, Clock, Info, Wifi, WifiOff } from 'lucide-react';
 import { FileUploader } from './FileUploader';
 import { PDFViewer } from './PDFViewer';
 import { PDFToolOptions } from './PDFToolOptions';
 import { ProgressTracker } from './ProgressTracker';
 import { PDFEngine } from './PDFEngine';
+import { backendToolsService, aiToolsService } from '@/services/BackendToolsService';
+import { robustSupabase } from '@/integrations/supabase/robust-client';
 import { toast } from '@/hooks/use-toast';
 
 export type ProcessingTool = 'merge' | 'split' | 'rotate' | 'compress' | 'extract' | 'watermark' | 'crop' | 'view' | 'convert' | 'protect' | 'unlock' | 'edit';
@@ -40,13 +41,25 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [options, setOptions] = useState<Record<string, any>>({});
+  const [backendStatus, setBackendStatus] = useState<{ available: boolean; services: string[] }>({ available: false, services: [] });
 
   const isClientSide = toolId ? CLIENT_SIDE_TOOLS.includes(toolId) : false;
   const isServerSide = toolId ? SERVER_SIDE_TOOLS.includes(toolId) : false;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    checkBackendStatus();
   }, [toolId]);
+
+  const checkBackendStatus = async () => {
+    try {
+      const status = await backendToolsService.checkBackendStatus();
+      setBackendStatus(status);
+    } catch (error) {
+      console.error('Failed to check backend status:', error);
+      setBackendStatus({ available: false, services: [] });
+    }
+  };
 
   const handleFilesChange = useCallback((selectedFiles: File[]) => {
     setFiles(selectedFiles);
@@ -70,17 +83,6 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
       return;
     }
 
-    // Handle server-side tools
-    if (isServerSide) {
-      toast({
-        title: "Coming Soon",
-        description: "This feature requires server infrastructure and will be available soon.",
-        variant: "default"
-      });
-      return;
-    }
-
-    // Handle client-side processing
     setIsProcessing(true);
     setError(null);
     setProgress(0);
@@ -100,64 +102,111 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
         });
       }, 200);
 
-      let result: Uint8Array | Uint8Array[] | string;
-
-      switch (tool) {
-        case 'merge':
-          if (files.length < 2) {
-            throw new Error('Please select at least 2 PDF files to merge');
-          }
-          result = await PDFEngine.mergePDFs(files);
-          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
-          break;
-
-        case 'split':
-          result = await PDFEngine.splitPDF(files[0], options);
-          const splitBlobs = (result as Uint8Array[]).map(data => 
-            new Blob([data], { type: 'application/pdf' })
-          );
-          setProcessedFiles(splitBlobs);
-          break;
-
-        case 'compress':
-          result = await PDFEngine.compressPDF(files[0], options);
-          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
-          break;
-
-        case 'rotate':
-          result = await PDFEngine.rotatePDF(files[0], options);
-          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
-          break;
-
-        case 'extract':
-          result = await PDFEngine.extractPages(files[0], options);
-          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
-          break;
-
-        case 'watermark':
-          result = await PDFEngine.addWatermark(files[0], options);
-          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
-          break;
-
-        case 'crop':
-          result = await PDFEngine.cropPDF(files[0], options);
-          setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
-          break;
-
-        case 'convert':
-          if (toolId === 'pdf-to-text') {
-            result = await PDFEngine.convertPDF(files[0], { toolId });
-            setProcessedText(result as string);
-          } else if (toolId === 'image-to-pdf') {
-            result = await PDFEngine.convertImagesToPDF(files);
-            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+      // Handle server-side tools with backend processing
+      if (isServerSide) {
+        if (!backendStatus.available) {
+          // Use simulation for demo purposes
+          const result = await backendToolsService.simulateProcessing({
+            toolId: toolId!,
+            files,
+            options
+          });
+          
+          if (result.success && result.data) {
+            if (typeof result.data === 'string') {
+              setProcessedText(result.data);
+            } else if (result.data instanceof Blob) {
+              setProcessedFiles([result.data]);
+            } else if (Array.isArray(result.data)) {
+              setProcessedFiles(result.data);
+            }
           } else {
-            throw new Error('This conversion tool requires server processing');
+            throw new Error(result.error || 'Processing failed');
           }
-          break;
+        } else {
+          // Use actual backend processing
+          const result = await backendToolsService.processWithBackend({
+            toolId: toolId!,
+            files,
+            options
+          });
 
-        default:
-          throw new Error(`Tool ${tool} requires server processing`);
+          if (result.success && result.data) {
+            if (typeof result.data === 'string') {
+              setProcessedText(result.data);
+            } else if (result.data instanceof Blob) {
+              setProcessedFiles([result.data]);
+            } else if (Array.isArray(result.data)) {
+              setProcessedFiles(result.data);
+            }
+          } else {
+            if (result.requiresAuth) {
+              throw new Error('This feature requires authentication. Please sign in to continue.');
+            }
+            throw new Error(result.error || 'Processing failed');
+          }
+        }
+      } else {
+        // Handle client-side processing
+        let result: Uint8Array | Uint8Array[] | string;
+
+        switch (tool) {
+          case 'merge':
+            if (files.length < 2) {
+              throw new Error('Please select at least 2 PDF files to merge');
+            }
+            result = await PDFEngine.mergePDFs(files);
+            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+            break;
+
+          case 'split':
+            result = await PDFEngine.splitPDF(files[0], options);
+            const splitBlobs = (result as Uint8Array[]).map(data => 
+              new Blob([data], { type: 'application/pdf' })
+            );
+            setProcessedFiles(splitBlobs);
+            break;
+
+          case 'compress':
+            result = await PDFEngine.compressPDF(files[0], options);
+            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+            break;
+
+          case 'rotate':
+            result = await PDFEngine.rotatePDF(files[0], options);
+            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+            break;
+
+          case 'extract':
+            result = await PDFEngine.extractPages(files[0], options);
+            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+            break;
+
+          case 'watermark':
+            result = await PDFEngine.addWatermark(files[0], options);
+            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+            break;
+
+          case 'crop':
+            result = await PDFEngine.cropPDF(files[0], options);
+            setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+            break;
+
+          case 'convert':
+            if (toolId === 'pdf-to-text') {
+              result = await PDFEngine.convertPDF(files[0], { toolId });
+              setProcessedText(result as string);
+            } else if (toolId === 'image-to-pdf') {
+              result = await PDFEngine.convertImagesToPDF(files);
+              setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
+            } else {
+              throw new Error('This conversion tool requires server processing');
+            }
+            break;
+
+          default:
+            throw new Error(`Tool ${tool} requires server processing`);
+        }
       }
 
       clearInterval(progressInterval);
@@ -269,11 +318,31 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
           <p className="text-muted-foreground text-sm mb-2">
             {isClientSide ? 'Instant processing in your browser' : 'Advanced server-side processing'}
           </p>
+          
+          {/* Backend Status Indicator */}
+          <div className="flex justify-center items-center gap-2 mb-4">
+            {robustSupabase.isReady() ? (
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                <Wifi className="w-3 h-3 mr-1 text-green-600 dark:text-green-400" />
+                <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                  Backend Connected
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
+                <WifiOff className="w-3 h-3 mr-1 text-orange-600 dark:text-orange-400" />
+                <span className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                  Demo Mode
+                </span>
+              </div>
+            )}
+          </div>
+
           {isServerSide && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mt-2">
               <Clock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                Coming Soon - Advanced Processing Required
+                {backendStatus.available ? 'Advanced Processing Available' : 'Demo Mode - Connect Backend for Full Features'}
               </span>
             </div>
           )}
@@ -293,36 +362,33 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
               acceptedTypes={getAcceptedTypes()}
             />
 
-            {isClientSide && (
-              <PDFToolOptions 
-                tool={tool}
-                options={options}
-                onOptionsChange={handleOptionsChange}
-                toolId={toolId}
-              />
-            )}
+            <PDFToolOptions 
+              tool={tool}
+              options={options}
+              onOptionsChange={handleOptionsChange}
+              toolId={toolId}
+            />
             
             <Button 
               onClick={handleProcess}
-              disabled={files.length === 0 || isProcessing || isServerSide}
+              disabled={files.length === 0 || isProcessing}
               className="w-full"
               size="lg"
             >
               {isProcessing ? 'Processing...' : 
-               isServerSide ? 'Coming Soon' : 
                `Process with ${getToolTitle(toolId || '')}`}
             </Button>
 
-            {isServerSide && (
+            {isServerSide && !backendStatus.available && (
               <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <div className="flex items-start space-x-3">
                   <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                   <div>
                     <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                      Advanced Processing Coming Soon
+                      Demo Mode Active
                     </h3>
                     <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                      This tool requires server infrastructure for optimal performance. We're working on bringing you:
+                      This tool is running in demo mode. Connect your Supabase backend for full functionality:
                     </p>
                     <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
                       <li>• High-quality document conversion</li>
@@ -330,6 +396,14 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
                       <li>• Enterprise-grade security</li>
                       <li>• Batch processing support</li>
                     </ul>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={checkBackendStatus}
+                      className="mt-3 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                    >
+                      Check Connection
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -369,7 +443,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
               </div>
             )}
             
-            {files.length > 0 && !isProcessing && !error && !processedText && isClientSide && (
+            {files.length > 0 && !isProcessing && !error && !processedText && (
               <PDFViewer file={files[0]} />
             )}
             

@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { RobustErrorBoundary } from "@/components/RobustErrorBoundary";
 import Index from "./pages/Index";
 import ToolPage from "./pages/ToolPage";
 import CategoriesPage from "./pages/CategoriesPage";
@@ -24,25 +24,25 @@ const queryClient = new QueryClient({
   },
 });
 
-// Register service worker
+// Register service worker for better performance
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('SW registered: ', registration);
+        console.log('✅ Service Worker registered:', registration);
       })
       .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
+        console.log('❌ Service Worker registration failed:', registrationError);
       });
   });
 }
 
 const App: React.FC = () => {
   return (
-    <ErrorBoundary>
+    <RobustErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="light" storageKey="pdf-pro-suite-theme">
+          <ThemeProvider defaultTheme="light" storageKey="pdf-master-pro-theme">
             <TooltipProvider delayDuration={300}>
               <Toaster />
               <Sonner />
@@ -59,7 +59,7 @@ const App: React.FC = () => {
           </ThemeProvider>
         </QueryClientProvider>
       </HelmetProvider>
-    </ErrorBoundary>
+    </RobustErrorBoundary>
   );
 };
 
