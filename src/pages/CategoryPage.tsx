@@ -75,10 +75,7 @@ export default function CategoryPage() {
           </p>
         </div>
         
-        <ToolsGrid
-          filter={categoryId as any}
-          showTitle={false}
-        />
+        <ToolsGrid />
       </main>
       <Footer />
     </div>
