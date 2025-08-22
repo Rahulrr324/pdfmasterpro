@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertTriangle, Download, Clock } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Download, Clock, Info } from 'lucide-react';
 import { FileUploader } from './FileUploader';
 import { PDFViewer } from './PDFViewer';
 import { PDFToolOptions } from './PDFToolOptions';
@@ -74,7 +74,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
     if (isServerSide) {
       toast({
         title: "Coming Soon",
-        description: "This advanced feature will be available soon with our server infrastructure.",
+        description: "This feature requires server infrastructure and will be available soon.",
         variant: "default"
       });
       return;
@@ -152,12 +152,12 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             result = await PDFEngine.convertImagesToPDF(files);
             setProcessedFiles([new Blob([result], { type: 'application/pdf' })]);
           } else {
-            throw new Error('This conversion tool is coming soon');
+            throw new Error('This conversion tool requires server processing');
           }
           break;
 
         default:
-          throw new Error(`Tool ${tool} is coming soon`);
+          throw new Error(`Tool ${tool} requires server processing`);
       }
 
       clearInterval(progressInterval);
@@ -267,13 +267,13 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             {getToolTitle(toolId || '')}
           </h1>
           <p className="text-muted-foreground text-sm mb-2">
-            Professional PDF processing tool
+            {isClientSide ? 'Instant processing in your browser' : 'Advanced server-side processing'}
           </p>
           {isServerSide && (
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mt-2">
               <Clock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                Advanced Server Processing - Coming Soon
+                Coming Soon - Advanced Processing Required
               </span>
             </div>
           )}
@@ -304,29 +304,34 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
             
             <Button 
               onClick={handleProcess}
-              disabled={files.length === 0 || isProcessing}
+              disabled={files.length === 0 || isProcessing || isServerSide}
               className="w-full"
               size="lg"
             >
               {isProcessing ? 'Processing...' : 
-               isServerSide ? 'Preview Feature (Coming Soon)' : 
-               `Process ${getToolTitle(toolId || '')}`}
+               isServerSide ? 'Coming Soon' : 
+               `Process with ${getToolTitle(toolId || '')}`}
             </Button>
 
             {isServerSide && (
               <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                  Advanced Processing Coming Soon
-                </h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                  This tool requires advanced server infrastructure for optimal performance and will be available soon.
-                </p>
-                <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-                  <li>• High-quality document conversion</li>
-                  <li>• Advanced OCR and AI features</li>
-                  <li>• Enterprise-grade security</li>
-                  <li>• Batch processing capabilities</li>
-                </ul>
+                <div className="flex items-start space-x-3">
+                  <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                      Advanced Processing Coming Soon
+                    </h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                      This tool requires server infrastructure for optimal performance. We're working on bringing you:
+                    </p>
+                    <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                      <li>• High-quality document conversion</li>
+                      <li>• Advanced OCR and AI capabilities</li>
+                      <li>• Enterprise-grade security</li>
+                      <li>• Batch processing support</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
@@ -364,7 +369,7 @@ export const PDFProcessor: React.FC<PDFProcessorProps> = ({ tool, toolId }) => {
               </div>
             )}
             
-            {files.length > 0 && !isProcessing && !error && !processedText && (
+            {files.length > 0 && !isProcessing && !error && !processedText && isClientSide && (
               <PDFViewer file={files[0]} />
             )}
             

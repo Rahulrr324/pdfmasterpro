@@ -2,17 +2,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LucideIcon } from "lucide-react";
+import { Clock } from "lucide-react";
 import React from "react";
 
 interface ProfessionalToolCardProps {
   title: string;
   description: string;
-  icon: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
   category: "convert" | "edit" | "organize" | "security" | "ai" | "optimize";
-  isNew?: boolean;
   onClick?: () => void;
   toolId?: string;
+  isReady?: boolean;
+  requiresServer?: boolean;
 }
 
 const categoryColors = {
@@ -38,9 +39,10 @@ export const ProfessionalToolCard = ({
   description, 
   icon: Icon, 
   category, 
-  isNew,
   onClick,
-  toolId
+  toolId,
+  isReady = true,
+  requiresServer = false
 }: ProfessionalToolCardProps) => {
   return (
     <Card 
@@ -62,9 +64,15 @@ export const ProfessionalToolCard = ({
             <Icon className="w-7 h-7" aria-hidden="true" />
           </div>
           <div className="flex flex-col gap-2">
-            {isNew && (
+            {isReady && (
               <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1">
-                New
+                Ready
+              </Badge>
+            )}
+            {requiresServer && !isReady && (
+              <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-2 py-1 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Soon
               </Badge>
             )}
           </div>
@@ -90,7 +98,7 @@ export const ProfessionalToolCard = ({
             tabIndex={-1}
             aria-hidden="true"
           >
-            Use Tool →
+            {isReady ? "Use Tool →" : "Coming Soon"}
           </Button>
         </div>
       </CardContent>

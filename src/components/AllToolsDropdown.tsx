@@ -15,15 +15,15 @@ const categories = [
     icon: FileText,
     description: "Transform PDFs to different formats",
     tools: [
-      { id: "pdf-to-word", title: "PDF to Word", comingSoon: true },
-      { id: "pdf-to-excel", title: "PDF to Excel", comingSoon: true },
-      { id: "pdf-to-jpg", title: "PDF to JPG", comingSoon: true },
-      { id: "pdf-to-png", title: "PDF to PNG", comingSoon: true },
-      { id: "word-to-pdf", title: "Word to PDF", comingSoon: true },
-      { id: "excel-to-pdf", title: "Excel to PDF", comingSoon: true },
-      { id: "html-to-pdf", title: "HTML to PDF", comingSoon: true },
-      { id: "image-to-pdf", title: "Image to PDF", comingSoon: false },
-      { id: "pdf-to-text", title: "PDF to Text", comingSoon: false },
+      { id: "pdf-to-word", title: "PDF to Word", isReady: false },
+      { id: "pdf-to-excel", title: "PDF to Excel", isReady: false },
+      { id: "pdf-to-jpg", title: "PDF to JPG", isReady: false },
+      { id: "pdf-to-png", title: "PDF to PNG", isReady: false },
+      { id: "word-to-pdf", title: "Word to PDF", isReady: false },
+      { id: "excel-to-pdf", title: "Excel to PDF", isReady: false },
+      { id: "html-to-pdf", title: "HTML to PDF", isReady: false },
+      { id: "image-to-pdf", title: "Image to PDF", isReady: true },
+      { id: "pdf-to-text", title: "PDF to Text", isReady: true },
     ]
   },
   {
@@ -31,11 +31,11 @@ const categories = [
     icon: Edit3,
     description: "Modify and enhance PDFs",
     tools: [
-      { id: "edit-pdf", title: "Edit PDF", comingSoon: true },
-      { id: "rotate-pdf", title: "Rotate PDF", comingSoon: false },
-      { id: "crop-pdf", title: "Crop PDF", comingSoon: false },
-      { id: "watermark-pdf", title: "Add Watermark", comingSoon: false },
-      { id: "view-pdf", title: "View PDF", comingSoon: false },
+      { id: "edit-pdf", title: "Edit PDF", isReady: false },
+      { id: "rotate-pdf", title: "Rotate PDF", isReady: true },
+      { id: "crop-pdf", title: "Crop PDF", isReady: true },
+      { id: "watermark-pdf", title: "Add Watermark", isReady: true },
+      { id: "view-pdf", title: "View PDF", isReady: true },
     ]
   },
   {
@@ -43,9 +43,9 @@ const categories = [
     icon: FolderOpen,
     description: "Manage PDF structure",
     tools: [
-      { id: "merge-pdf", title: "Merge PDF", comingSoon: false },
-      { id: "split-pdf", title: "Split PDF", comingSoon: false },
-      { id: "extract-pages", title: "Extract Pages", comingSoon: false },
+      { id: "merge-pdf", title: "Merge PDF", isReady: true },
+      { id: "split-pdf", title: "Split PDF", isReady: true },
+      { id: "extract-pages", title: "Extract Pages", isReady: true },
     ]
   },
   {
@@ -53,8 +53,8 @@ const categories = [
     icon: Shield,
     description: "Protect your documents",
     tools: [
-      { id: "protect-pdf", title: "Protect PDF", comingSoon: true },
-      { id: "unlock-pdf", title: "Unlock PDF", comingSoon: true },
+      { id: "protect-pdf", title: "Protect PDF", isReady: false },
+      { id: "unlock-pdf", title: "Unlock PDF", isReady: false },
     ]
   },
   {
@@ -62,7 +62,7 @@ const categories = [
     icon: Zap,
     description: "Improve performance",
     tools: [
-      { id: "compress-pdf", title: "Compress PDF", comingSoon: false },
+      { id: "compress-pdf", title: "Compress PDF", isReady: true },
     ]
   },
   {
@@ -70,10 +70,10 @@ const categories = [
     icon: Brain,
     description: "AI-powered features",
     tools: [
-      { id: "ocr-pdf", title: "OCR PDF", comingSoon: true },
-      { id: "translate-pdf", title: "Translate PDF", comingSoon: true },
-      { id: "summarize-pdf", title: "Summarize PDF", comingSoon: true },
-      { id: "chat-pdf", title: "Chat with PDF", comingSoon: true },
+      { id: "ocr-pdf", title: "OCR PDF", isReady: false },
+      { id: "translate-pdf", title: "Translate PDF", isReady: false },
+      { id: "summarize-pdf", title: "Summarize PDF", isReady: false },
+      { id: "chat-pdf", title: "Chat with PDF", isReady: false },
     ]
   },
 ];
@@ -109,6 +109,9 @@ export const AllToolsDropdown = () => {
       clearTimeout(hoverTimeout);
     };
   }, []);
+
+  const readyCount = categories.reduce((acc, cat) => acc + cat.tools.filter(t => t.isReady).length, 0);
+  const comingSoonCount = categories.reduce((acc, cat) => acc + cat.tools.filter(t => !t.isReady).length, 0);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -157,12 +160,12 @@ export const AllToolsDropdown = () => {
                     <span className="text-sm text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 px-2 py-1 rounded transition-colors flex-1">
                       {tool.title}
                     </span>
-                    {tool.comingSoon && (
+                    {!tool.isReady && (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
                         Soon
                       </span>
                     )}
-                    {!tool.comingSoon && (
+                    {tool.isReady && (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700">
                         Ready
                       </span>
@@ -177,8 +180,8 @@ export const AllToolsDropdown = () => {
         <div className="mt-6 pt-4 border-t border-border">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">
-              <span className="font-medium text-green-600 dark:text-green-400">Ready:</span> Available now • 
-              <span className="font-medium text-blue-600 dark:text-blue-400 ml-2">Soon:</span> Coming with advanced features
+              <span className="font-medium text-green-600 dark:text-green-400">{readyCount} Ready</span> • 
+              <span className="font-medium text-blue-600 dark:text-blue-400 ml-2">{comingSoonCount} Coming Soon</span>
             </p>
             <Button 
               variant="outline" 
