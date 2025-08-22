@@ -87,7 +87,7 @@ export const supabase = robustSupabase.getClient();
 // Export connection utilities
 export { checkSupabaseConnection, TROUBLESHOOTING_GUIDE };
 
-// Helper function for backend operations
+// Helper function for backend operations with proper typing
 export const withSupabaseBackend = async <T>(
   operation: (client: SupabaseClient<Database>) => Promise<T>,
   fallback?: () => Promise<T>

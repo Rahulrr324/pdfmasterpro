@@ -70,7 +70,7 @@ class BackendToolsService {
           };
         },
         // Fallback for when Supabase is not available
-        async () => {
+        async (): Promise<BackendProcessResponse> => {
           console.warn(`Backend processing not available for ${request.toolId}`);
           return {
             success: false,
@@ -111,7 +111,7 @@ class BackendToolsService {
             services: data?.services || []
           };
         },
-        async () => ({
+        async (): Promise<{ available: boolean; services: string[] }> => ({
           available: false,
           services: []
         })
@@ -161,7 +161,7 @@ export const aiToolsService = {
         if (error) throw error;
         return data.response;
       },
-      async () => {
+      async (): Promise<string> => {
         return "AI chat requires backend connection. Please configure Supabase to use this feature.";
       }
     );
@@ -183,7 +183,7 @@ export const aiToolsService = {
         if (error) throw error;
         return data.summary;
       },
-      async () => {
+      async (): Promise<string> => {
         return "PDF summarization requires backend connection. Please configure Supabase to use this feature.";
       }
     );
@@ -203,7 +203,7 @@ export const aiToolsService = {
         if (error) throw error;
         return new Blob([data.translatedPdf], { type: 'application/pdf' });
       },
-      async () => {
+      async (): Promise<Blob> => {
         throw new Error("PDF translation requires backend connection. Please configure Supabase to use this feature.");
       }
     );
@@ -226,7 +226,7 @@ export const aiToolsService = {
           searchablePdf: new Blob([data.searchablePdf], { type: 'application/pdf' })
         };
       },
-      async () => {
+      async (): Promise<{ text: string; searchablePdf: Blob }> => {
         throw new Error("OCR processing requires backend connection. Please configure Supabase to use this feature.");
       }
     );

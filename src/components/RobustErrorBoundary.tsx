@@ -42,23 +42,19 @@ export class RobustErrorBoundary extends Component<Props, State> {
       backendStatus
     });
 
-    // Try to log error to backend if available
-    try {
-      if (backendStatus) {
-        const supabase = robustSupabase.getClient();
-        await supabase.from('error_logs').insert({
-          error_id: this.state.errorId,
-          error_message: error.message,
-          error_stack: error.stack,
-          component_stack: errorInfo.componentStack,
-          user_agent: navigator.userAgent,
-          url: window.location.href,
-          timestamp: new Date().toISOString()
-        });
-      }
-    } catch (logError) {
-      console.warn("Failed to log error to backend:", logError);
-    }
+    // Log error to console for development
+    console.log("Error Details:", {
+      errorId: this.state.errorId,
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      timestamp: new Date().toISOString()
+    });
+
+    // Note: Error logging to database would require proper table setup
+    // For now, we just log to console for debugging purposes
   }
 
   handleReload = () => {
