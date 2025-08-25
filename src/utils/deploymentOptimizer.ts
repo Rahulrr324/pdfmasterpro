@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Deployment optimization utilities for InfinityFree
 export class DeploymentOptimizer {
   // Optimize images for web delivery
@@ -62,10 +64,15 @@ export class DeploymentOptimizer {
   static optimizeMemoryUsage() {
     // Clear image caches periodically
     setInterval(() => {
-      if (performance.memory && performance.memory.usedJSHeapSize > 50 * 1024 * 1024) {
+      // Check if performance.memory is available (Chrome only)
+      const memoryInfo = (performance as any).memory;
+      if (memoryInfo && memoryInfo.usedJSHeapSize > 50 * 1024 * 1024) {
         // Clear caches when memory usage exceeds 50MB
         console.log('Optimizing memory usage...');
-        window.gc && window.gc();
+        // Force garbage collection if available
+        if ((window as any).gc) {
+          (window as any).gc();
+        }
       }
     }, 30000);
   }
