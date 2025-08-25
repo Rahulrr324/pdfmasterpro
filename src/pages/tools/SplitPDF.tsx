@@ -123,13 +123,16 @@ export default function SplitPDF() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Upload & Options Section */}
           <div className="space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Select PDF file to split</h3>
+              <p className="text-muted-foreground">Choose a PDF file</p>
+            </div>
+            
             <FileUploader 
               files={file ? [file] : []}
               onFilesChange={handleFileChange}
               allowMultiple={false}
               acceptedTypes=".pdf"
-              title="Select PDF file to split"
-              description="Choose a PDF file"
             />
 
             {file && (
